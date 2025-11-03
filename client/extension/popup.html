@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ResumeMatch Pro</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        width: 400px;
+        min-height: 600px;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: hsl(0, 0%, 100%);
+        color: hsl(222.2, 84%, 4.9%);
+      }
+
+      body.dark {
+        background: hsl(222.2, 84%, 4.9%);
+        color: hsl(210, 40%, 98%);
+      }
+
+      .container {
+        padding: 16px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid hsl(214.3, 31.8%, 91.4%);
+      }
+
+      body.dark .header {
+        border-bottom-color: hsl(217.2, 32.6%, 17.5%);
+      }
+
+      .header h1 {
+        font-size: 18px;
+        font-weight: 700;
+        background: linear-gradient(135deg, hsl(262, 80%, 50%) 0%, hsl(218, 92%, 50%) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .content {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .card {
+        background: hsl(0, 0%, 100%);
+        border: 1px solid hsl(214.3, 31.8%, 91.4%);
+        border-radius: 8px;
+        padding: 12px;
+        font-size: 13px;
+      }
+
+      body.dark .card {
+        background: hsl(217.2, 32.6%, 17.5%);
+        border-color: hsl(217.2, 32.6%, 17.5%);
+      }
+
+      .status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px;
+        background: hsl(210, 40%, 96.1%);
+        border-radius: 6px;
+        font-size: 12px;
+        margin-bottom: 12px;
+      }
+
+      body.dark .status {
+        background: hsl(217.2, 32.6%, 17.5%);
+      }
+
+      .status-icon {
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+      }
+
+      .status-text {
+        flex: 1;
+      }
+
+      .status-text strong {
+        display: block;
+        margin-bottom: 2px;
+      }
+
+      .button {
+        width: 100%;
+        padding: 10px 12px;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .button-primary {
+        background: linear-gradient(135deg, hsl(262, 80%, 50%) 0%, hsl(218, 92%, 50%) 100%);
+        color: hsl(0, 0%, 100%);
+      }
+
+      .button-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 51, 153, 0.3);
+      }
+
+      .button-secondary {
+        background: hsl(210, 40%, 96.1%);
+        color: hsl(222.2, 84%, 4.9%);
+        border: 1px solid hsl(214.3, 31.8%, 91.4%);
+      }
+
+      body.dark .button-secondary {
+        background: hsl(217.2, 32.6%, 17.5%);
+        color: hsl(210, 40%, 98%);
+        border-color: hsl(217.2, 32.6%, 17.5%);
+      }
+
+      .button-secondary:hover {
+        background: hsl(210, 40%, 92%);
+      }
+
+      body.dark .button-secondary:hover {
+        background: hsl(217.2, 32.6%, 22%);
+      }
+
+      .input-group {
+        margin-bottom: 12px;
+      }
+
+      .input-group label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 4px;
+        color: hsl(215.4, 16.3%, 46.9%);
+      }
+
+      .input-group input,
+      .input-group textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid hsl(214.3, 31.8%, 91.4%);
+        border-radius: 4px;
+        font-family: inherit;
+        font-size: 12px;
+      }
+
+      body.dark .input-group input,
+      body.dark .input-group textarea {
+        background: hsl(217.2, 32.6%, 17.5%);
+        color: hsl(210, 40%, 98%);
+        border-color: hsl(217.2, 32.6%, 17.5%);
+      }
+
+      .loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 24px;
+        text-align: center;
+      }
+
+      .spinner {
+        width: 24px;
+        height: 24px;
+        border: 3px solid hsl(214.3, 31.8%, 91.4%);
+        border-top-color: hsl(262, 80%, 50%);
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+      }
+
+      body.dark .spinner {
+        border-color: hsl(217.2, 32.6%, 17.5%);
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .footer {
+        padding-top: 12px;
+        border-top: 1px solid hsl(214.3, 31.8%, 91.4%);
+        font-size: 11px;
+        text-align: center;
+        color: hsl(215.4, 16.3%, 46.9%);
+      }
+
+      body.dark .footer {
+        border-top-color: hsl(217.2, 32.6%, 17.5%);
+      }
+
+      .error {
+        background: hsl(0, 84.2%, 60.2%);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        margin-bottom: 12px;
+      }
+
+      .success {
+        background: hsl(120, 100%, 50%);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        margin-bottom: 12px;
+      }
+
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>📄 ResumeMatch Pro</h1>
+      </div>
+
+      <div class="content">
+        <div id="main-content">
+          <div id="status" class="status">
+            <div class="status-icon">⏳</div>
+            <div class="status-text">
+              <strong>Initialize Extension</strong>
+              <span>Loading your resume...</span>
+            </div>
+          </div>
+
+          <div id="job-info" class="card hidden">
+            <strong>Job Title:</strong>
+            <span id="job-title">-</span>
+            <br />
+            <strong>Company:</strong>
+            <span id="job-company">-</span>
+          </div>
+
+          <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p>Tailoring your resume...</p>
+          </div>
+
+          <div id="error" class="error hidden"></div>
+          <div id="success" class="success hidden"></div>
+
+          <div id="buttons" class="hidden">
+            <button class="button button-primary" id="tailor-btn">
+              ⚡ Tailor Resume
+            </button>
+            <button class="button button-secondary" id="download-btn" disabled>
+              ⬇️ Download Resume
+            </button>
+            <button class="button button-secondary" id="save-btn" disabled>
+              💾 Save Application
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <p>
+          💡 Tip: Upload your master resume on
+          <a href="#" id="dashboard-link" style="color: inherit; text-decoration: underline">
+            the dashboard
+          </a>
+        </p>
+      </div>
+    </div>
+
+    <script src="popup.ts" type="module"></script>
+  </body>
+</html>
