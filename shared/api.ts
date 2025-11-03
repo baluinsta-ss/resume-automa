@@ -80,3 +80,7 @@ export interface User {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+export interface DemoResponse {
+  message: string;
+}
