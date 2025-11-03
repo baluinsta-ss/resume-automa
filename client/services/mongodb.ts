@@ -19,9 +19,7 @@ export async function saveUser(userData: User): Promise<User> {
 
 export async function getUserResume(userId: string): Promise<ResumeData | null> {
   try {
-    const response = await fetch(
-      `${import.meta.env.VITE_API_URL}/users/${userId}/resume`
-    );
+    const response = await fetch(`${API_URL}/users/${userId}/resume`);
     if (!response.ok) return null;
     return await response.json();
   } catch (error) {
@@ -35,14 +33,12 @@ export async function saveResume(
   resume: ResumeData
 ): Promise<ResumeData> {
   try {
-    const response = await fetch(
-      `${import.meta.env.VITE_API_URL}/users/${userId}/resume`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(resume),
-      }
-    );
+    const response = await fetch(`${API_URL}/users/${userId}/resume`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(resume),
+    });
+    if (!response.ok) throw new Error("Failed to save resume");
     return await response.json();
   } catch (error) {
     console.error("Error saving resume:", error);
@@ -54,14 +50,12 @@ export async function saveApplication(
   application: ApplicationRecord
 ): Promise<ApplicationRecord> {
   try {
-    const response = await fetch(
-      `${import.meta.env.VITE_API_URL}/applications`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(application),
-      }
-    );
+    const response = await fetch(`${API_URL}/applications`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(application),
+    });
+    if (!response.ok) throw new Error("Failed to save application");
     return await response.json();
   } catch (error) {
     console.error("Error saving application:", error);
@@ -73,9 +67,7 @@ export async function getApplicationHistory(
   userId: string
 ): Promise<ApplicationRecord[]> {
   try {
-    const response = await fetch(
-      `${import.meta.env.VITE_API_URL}/applications?userId=${userId}`
-    );
+    const response = await fetch(`${API_URL}/applications?userId=${userId}`);
     if (!response.ok) return [];
     return await response.json();
   } catch (error) {
@@ -89,14 +81,12 @@ export async function updateApplicationStatus(
   status: ApplicationRecord["status"]
 ): Promise<ApplicationRecord> {
   try {
-    const response = await fetch(
-      `${import.meta.env.VITE_API_URL}/applications/${applicationId}`,
-      {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      }
-    );
+    const response = await fetch(`${API_URL}/applications/${applicationId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    if (!response.ok) throw new Error("Failed to update application");
     return await response.json();
   } catch (error) {
     console.error("Error updating application status:", error);
