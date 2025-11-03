@@ -1,34 +1,6 @@
-import * as Realm from "@mongodb-js/realm-web";
 import { User, ResumeData, ApplicationRecord } from "@/types";
 
-const REALM_APP_ID = import.meta.env.VITE_MONGODB_REALM_APP_ID || "";
-
-let app: Realm.App | null = null;
-
-async function initRealm(): Promise<Realm.App> {
-  if (app) return app;
-  if (!REALM_APP_ID) {
-    throw new Error(
-      "MongoDB Realm App ID not configured. Set VITE_MONGODB_REALM_APP_ID in .env"
-    );
-  }
-
-  app = new Realm.App({ id: REALM_APP_ID });
-  return app;
-}
-
-export async function loginAnonymously(): Promise<Realm.User> {
-  const realmApp = await initRealm();
-  const user = await realmApp.logIn(new Realm.AnonymousCredential());
-  return user;
-}
-
-export async function logout(): Promise<void> {
-  const realmApp = await initRealm();
-  if (realmApp.currentUser) {
-    await realmApp.currentUser.logOut();
-  }
-}
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
 export async function saveUser(userData: User): Promise<User> {
   const realmApp = await initRealm();
