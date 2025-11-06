@@ -1,12 +1,98 @@
 import { ResumeData, ContactInfo, Experience, Education } from "@/types";
 import mammoth from "mammoth";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const GEMINI_API_KEY = import.meta.env.VITE_GOOGLE_GEMINI_API_KEY || "";
 
 export async function parseDocxFile(file: File): Promise<ResumeData> {
   const arrayBuffer = await file.arrayBuffer();
   const result = await mammoth.extractRawText({ arrayBuffer });
   const text = result.value;
 
-  return parseResumeText(text);
+  // First do basic parsing
+  let resume = parseResumeText(text);
+
+  // Then enhance with Gemini if API key is available
+  if (GEMINI_API_KEY) {
+    try {
+      resume = await enhanceWithGemini(resume, text);
+    } catch (error) {
+      console.warn("Gemini enhancement failed, using basic parsing:", error);
+      // Continue with basic parsing if Gemini fails
+    }
+  }
+
+  return resume;
+}
+
+async function enhanceWithGemini(
+  baseResume: ResumeData,
+  resumeText: string,
+): Promise<ResumeData> {
+  const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+  const prompt = `Parse this resume and extract structured information. Return a JSON object with these fields:
+{
+  "summary": "2-3 sentence professional summary",
+  "skills": ["skill1", "skill2", ...],
+  "certifications": ["cert1", "cert2", ...],
+  "achievements": ["achievement1", "achievement2", ...],
+  "publications": ["publication1", "publication2", ...],
+  "hobbies": ["hobby1", "hobby2", ...],
+  "experience": [
+    {
+      "title": "Job Title",
+      "company": "Company Name",
+      "startDate": "YYYY-MM",
+      "endDate": "YYYY-MM or Present",
+      "isCurrentlyWorking": true/false,
+      "description": ["bullet point 1", "bullet point 2"]
+    }
+  ],
+  "education": [
+    {
+      "degree": "Bachelor of Science",
+      "field": "Computer Science",
+      "institution": "University Name",
+      "graduationDate": "YYYY-MM"
+    }
+  ]
+}
+
+Resume text:
+${resumeText}
+
+Return ONLY valid JSON, no other text.`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const responseText = result.response.text();
+
+    // Extract JSON from response (handle markdown code blocks if present)
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.warn("No JSON found in Gemini response");
+      return baseResume;
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]);
+
+    return {
+      contact: baseResume.contact,
+      summary: parsed.summary || baseResume.summary,
+      skills: parsed.skills || baseResume.skills,
+      experience: parsed.experience || baseResume.experience,
+      education: parsed.education || baseResume.education,
+      certifications: parsed.certifications || [],
+      achievements: parsed.achievements || [],
+      publications: parsed.publications || [],
+      hobbies: parsed.hobbies || [],
+    };
+  } catch (error) {
+    console.error("Error parsing with Gemini:", error);
+    return baseResume;
+  }
 }
 
 function parseResumeText(text: string): ResumeData {
