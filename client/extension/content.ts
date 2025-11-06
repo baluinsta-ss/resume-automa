@@ -2,7 +2,7 @@ import {
   extractJobDescriptionFromDOM,
   createJobExtractionButton,
 } from "@/utils/jobExtractor";
-import { saveToStorage, getFromStorage } from "@/utils/storage";
+import { saveToStorage } from "@/utils/storage";
 
 let injectedButton = false;
 
@@ -22,15 +22,17 @@ function injectButton() {
       return;
     }
 
-    // Save to extension storage
-    await saveToStorage("currentJobData", jobData);
-
-    // Open extension popup
-    chrome.runtime.sendMessage({ action: "openPopup", jobData }, (response) => {
-      if (response?.success) {
-        alert("Opening ResumeMatch Pro...");
-      }
-    });
+    // Save job data to extension storage for the popup to access
+    try {
+      await saveToStorage("currentJobData", jobData);
+      // Open the popup
+      chrome.runtime.sendMessage({ action: "openPopup" }).catch(() => {
+        // Popup may already be open
+      });
+    } catch (error) {
+      console.error("Error saving job data:", error);
+      alert("Failed to extract job data. Please try again.");
+    }
   });
 }
 
@@ -54,18 +56,13 @@ observer.observe(document.body, {
   attributes: false,
 });
 
-// Listen for messages from popup
+// Listen for messages from popup or background
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "getJobData") {
     const jobData = extractJobDescriptionFromDOM();
-    sendResponse({ jobData });
-  } else if (request.action === "downloadResume") {
-    const link = document.createElement("a");
-    link.href = request.blobUrl;
-    link.download = request.filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    sendResponse({ jobData: jobData || null });
+  } else if (request.action === "injectButton") {
+    injectButton();
     sendResponse({ success: true });
   }
 });
