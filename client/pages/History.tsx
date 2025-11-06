@@ -23,12 +23,9 @@ export const History: React.FC = () => {
   useEffect(() => {
     const loadApplications = async () => {
       try {
-        const userId = await getUserId();
-        if (userId) {
-          const apps = await getApplicationHistory(userId);
-          setApplications(apps);
-          filterApplications(apps, "all");
-        }
+        const apps = await getApplicationHistory();
+        setApplications(apps);
+        filterApplications(apps, "all");
       } finally {
         setIsLoading(false);
       }
