@@ -75,7 +75,7 @@ export const ApplicationList: React.FC<ApplicationListProps> = ({
     <div className="space-y-3">
       {applications.map((app) => (
         <div
-          key={app._id}
+          key={app.id || app._id}
           className="rounded-lg border border-border bg-card p-4 hover:shadow-md transition-shadow"
         >
           <div className="flex items-start justify-between">
