@@ -1,29 +1,38 @@
 import { User, ResumeData, ApplicationRecord } from "@/types";
+import {
+  saveToStorage,
+  getFromStorage,
+  setMasterResume,
+  getMasterResume,
+} from "@/utils/storage";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+const STORAGE_KEYS = {
+  USER_DATA: "resumematch_user_data",
+  APPLICATIONS: "resumematch_applications",
+};
 
 export async function saveUser(userData: User): Promise<User> {
   try {
-    const response = await fetch(`${API_URL}/users`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(userData),
-    });
-    if (!response.ok) throw new Error("Failed to save user");
-    return await response.json();
+    await saveToStorage(STORAGE_KEYS.USER_DATA, userData);
+    return userData;
   } catch (error) {
     console.error("Error saving user:", error);
     throw error;
   }
 }
 
-export async function getUserResume(
-  userId: string,
-): Promise<ResumeData | null> {
+export async function getUser(): Promise<User | null> {
   try {
-    const response = await fetch(`${API_URL}/users/${userId}/resume`);
-    if (!response.ok) return null;
-    return await response.json();
+    return await getFromStorage(STORAGE_KEYS.USER_DATA);
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    return null;
+  }
+}
+
+export async function getUserResume(): Promise<ResumeData | null> {
+  try {
+    return await getMasterResume();
   } catch (error) {
     console.error("Error fetching resume:", error);
     return null;
@@ -31,17 +40,11 @@ export async function getUserResume(
 }
 
 export async function saveResume(
-  userId: string,
   resume: ResumeData,
 ): Promise<ResumeData> {
   try {
-    const response = await fetch(`${API_URL}/users/${userId}/resume`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(resume),
-    });
-    if (!response.ok) throw new Error("Failed to save resume");
-    return await response.json();
+    await setMasterResume(resume);
+    return resume;
   } catch (error) {
     console.error("Error saving resume:", error);
     throw error;
@@ -52,26 +55,24 @@ export async function saveApplication(
   application: ApplicationRecord,
 ): Promise<ApplicationRecord> {
   try {
-    const response = await fetch(`${API_URL}/applications`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(application),
-    });
-    if (!response.ok) throw new Error("Failed to save application");
-    return await response.json();
+    const applications = await getApplicationHistory();
+    const newApplication: ApplicationRecord = {
+      ...application,
+      id: `app_${Date.now()}`,
+    };
+    applications.push(newApplication);
+    await saveToStorage(STORAGE_KEYS.APPLICATIONS, applications);
+    return newApplication;
   } catch (error) {
     console.error("Error saving application:", error);
     throw error;
   }
 }
 
-export async function getApplicationHistory(
-  userId: string,
-): Promise<ApplicationRecord[]> {
+export async function getApplicationHistory(): Promise<ApplicationRecord[]> {
   try {
-    const response = await fetch(`${API_URL}/applications?userId=${userId}`);
-    if (!response.ok) return [];
-    return await response.json();
+    const history = await getFromStorage(STORAGE_KEYS.APPLICATIONS);
+    return history || [];
   } catch (error) {
     console.error("Error fetching application history:", error);
     return [];
@@ -83,13 +84,17 @@ export async function updateApplicationStatus(
   status: ApplicationRecord["status"],
 ): Promise<ApplicationRecord> {
   try {
-    const response = await fetch(`${API_URL}/applications/${applicationId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
-    if (!response.ok) throw new Error("Failed to update application");
-    return await response.json();
+    const applications = await getApplicationHistory();
+    const applicationIndex = applications.findIndex(
+      (app) => app.id === applicationId,
+    );
+    if (applicationIndex === -1) {
+      throw new Error("Application not found");
+    }
+    applications[applicationIndex].status = status;
+    applications[applicationIndex].updatedAt = new Date();
+    await saveToStorage(STORAGE_KEYS.APPLICATIONS, applications);
+    return applications[applicationIndex];
   } catch (error) {
     console.error("Error updating application status:", error);
     throw error;
