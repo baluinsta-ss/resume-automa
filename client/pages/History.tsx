@@ -52,7 +52,7 @@ export const History: React.FC = () => {
     try {
       await updateApplicationStatus(appId, newStatus);
       const updated = applications.map((app) =>
-        app._id === appId ? { ...app, status: newStatus } : app,
+        (app.id === appId || app._id === appId) ? { ...app, status: newStatus } : app,
       );
       setApplications(updated);
       filterApplications(updated, statusFilter);
