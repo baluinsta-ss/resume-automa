@@ -5,7 +5,7 @@ import {
   extractJobRequirements,
 } from "@/services/gemini";
 import { saveApplication } from "@/services/mongodb";
-import { downloadResume } from "@/services/resumeGenerator";
+import { downloadResume, generateResumeDocx } from "@/services/resumeGenerator";
 import { ResumeData, JobDescription, ApplicationRecord } from "@/types";
 
 interface PopupState {
@@ -13,6 +13,7 @@ interface PopupState {
   jobData: JobDescription | null;
   tailoredResume: ResumeData | null;
   atsScore: number;
+  jobDescription: JobDescription | null;
 }
 
 let state: PopupState = {
@@ -20,6 +21,7 @@ let state: PopupState = {
   jobData: null,
   tailoredResume: null,
   atsScore: 0,
+  jobDescription: null,
 };
 
 const statusEl = document.getElementById("status")!;
@@ -42,7 +44,7 @@ const dashboardLink = document.getElementById(
 // Initialize
 async function init() {
   try {
-    // Get master resume from storage
+    // Get master resume from browser storage
     state.masterResume = await getMasterResume();
 
     // Get job data from current tab
@@ -56,12 +58,14 @@ async function init() {
         currentTab[0].id,
         { action: "getJobData" },
         (response) => {
-          if (response?.jobData) {
+          if (response && response.jobData) {
             state.jobData = response.jobData;
           }
           updateUI();
         },
       );
+    } else {
+      updateUI();
     }
 
     if (!state.masterResume) {
@@ -106,8 +110,10 @@ function updateUI() {
   // Show job info if available
   if (state.jobData) {
     jobInfoEl.classList.remove("hidden");
-    document.getElementById("job-title")!.textContent = state.jobData.title;
-    document.getElementById("job-company")!.textContent = state.jobData.company;
+    const jobTitleEl = document.getElementById("job-title");
+    const jobCompanyEl = document.getElementById("job-company");
+    if (jobTitleEl) jobTitleEl.textContent = state.jobData.title || "Unknown";
+    if (jobCompanyEl) jobCompanyEl.textContent = state.jobData.company || "Unknown";
 
     // Show buttons
     buttonsEl.classList.remove("hidden");
@@ -132,24 +138,26 @@ tailorBtn.addEventListener("click", async () => {
   if (!state.masterResume || !state.jobData) return;
 
   loadingEl.classList.remove("hidden");
+  errorEl.classList.add("hidden");
+  successEl.classList.add("hidden");
   tailorBtn.disabled = true;
 
   try {
     // Extract job requirements
-    const jobDescription = await extractJobRequirements(
+    state.jobDescription = await extractJobRequirements(
       state.jobData.description,
     );
 
     // Tailor resume
     state.tailoredResume = await tailorResumeForJob(
       state.masterResume,
-      jobDescription,
+      state.jobDescription,
     );
 
     // Calculate ATS score
     const atsScoreData = await calculateATSScore(
       state.tailoredResume,
-      jobDescription,
+      state.jobDescription,
     );
     state.atsScore = atsScoreData.score;
 
@@ -172,16 +180,30 @@ downloadBtn.addEventListener("click", async () => {
   if (!state.tailoredResume || !state.jobData) return;
 
   downloadBtn.disabled = true;
+  errorEl.classList.add("hidden");
+  successEl.classList.add("hidden");
 
   try {
-    await downloadResume(
+    // Generate and download the resume
+    const blob = await generateResumeDocx(
       state.tailoredResume,
       state.jobData.company,
       state.jobData.title,
     );
+    const url = URL.createObjectURL(blob);
+
+    const today = new Date().toISOString().split("T")[0];
+    const filename = `Resume_${state.jobData.company}_${state.jobData.title}_${today}.docx`;
+
+    // Use Chrome downloads API
+    chrome.downloads.download({
+      url,
+      filename,
+      saveAs: false,
+    });
+
     successEl.classList.remove("hidden");
     successEl.textContent = "✓ Resume downloaded!";
-    successEl.classList.add("success");
     downloadBtn.disabled = false;
   } catch (error) {
     errorEl.classList.remove("hidden");
@@ -191,9 +213,11 @@ downloadBtn.addEventListener("click", async () => {
 });
 
 saveBtn.addEventListener("click", async () => {
-  if (!state.tailoredResume || !state.jobData) return;
+  if (!state.tailoredResume || !state.jobData || !state.masterResume) return;
 
   saveBtn.disabled = true;
+  errorEl.classList.add("hidden");
+  successEl.classList.add("hidden");
 
   try {
     const application: ApplicationRecord = {
@@ -202,7 +226,7 @@ saveBtn.addEventListener("click", async () => {
       company: state.jobData.company,
       jobUrl: state.jobData.url,
       jobDescription: state.jobData,
-      originalResume: state.masterResume!,
+      originalResume: state.masterResume,
       tailoredResume: state.tailoredResume,
       atsScore: state.atsScore,
       matchPercentage: state.atsScore,
@@ -212,8 +236,7 @@ saveBtn.addEventListener("click", async () => {
 
     await saveApplication(application);
     successEl.classList.remove("hidden");
-    successEl.textContent = "✓ Application saved!";
-    successEl.classList.add("success");
+    successEl.textContent = "✓ Application saved to your history!";
     saveBtn.disabled = false;
   } catch (error) {
     errorEl.classList.remove("hidden");
