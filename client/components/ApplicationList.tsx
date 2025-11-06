@@ -142,7 +142,7 @@ export const ApplicationList: React.FC<ApplicationListProps> = ({
                       <button
                         key={status}
                         onClick={() => {
-                          onStatusChange(app._id || "", status);
+                          onStatusChange(app.id || app._id || "", status);
                           setExpandedId(null);
                         }}
                         className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
