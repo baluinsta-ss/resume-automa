@@ -7,7 +7,6 @@ import {
   getApplicationHistory,
   updateApplicationStatus,
 } from "@/services/mongodb";
-import { getUserId } from "@/utils/storage";
 
 export const History: React.FC = () => {
   const navigate = useNavigate();
