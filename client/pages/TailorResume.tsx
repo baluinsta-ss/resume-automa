@@ -301,51 +301,62 @@ export const TailorResume: React.FC = () => {
                 )}
 
                 {/* Certifications */}
-                {masterResume.certifications && masterResume.certifications.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold text-sm mb-2">Certifications</h4>
-                    <ul className="space-y-1">
-                      {masterResume.certifications.map((cert, i) => (
-                        <li key={i} className="text-sm text-muted-foreground">
-                          ✓ {cert}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                {masterResume.certifications &&
+                  masterResume.certifications.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-sm mb-2">
+                        Certifications
+                      </h4>
+                      <ul className="space-y-1">
+                        {masterResume.certifications.map((cert, i) => (
+                          <li key={i} className="text-sm text-muted-foreground">
+                            ✓ {cert}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
                 {/* Achievements */}
-                {masterResume.achievements && masterResume.achievements.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold text-sm mb-2">Achievements</h4>
-                    <ul className="space-y-1">
-                      {masterResume.achievements.map((achievement, i) => (
-                        <li key={i} className="text-sm text-muted-foreground">
-                          🏆 {achievement}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                {masterResume.achievements &&
+                  masterResume.achievements.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-sm mb-2">
+                        Achievements
+                      </h4>
+                      <ul className="space-y-1">
+                        {masterResume.achievements.map((achievement, i) => (
+                          <li key={i} className="text-sm text-muted-foreground">
+                            🏆 {achievement}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
                 {/* Publications */}
-                {masterResume.publications && masterResume.publications.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold text-sm mb-2">Publications</h4>
-                    <ul className="space-y-1">
-                      {masterResume.publications.map((publication, i) => (
-                        <li key={i} className="text-sm text-muted-foreground">
-                          📄 {publication}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                {masterResume.publications &&
+                  masterResume.publications.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-sm mb-2">
+                        Publications
+                      </h4>
+                      <ul className="space-y-1">
+                        {masterResume.publications.map((publication, i) => (
+                          <li key={i} className="text-sm text-muted-foreground">
+                            📄 {publication}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
                 {/* Hobbies */}
                 {masterResume.hobbies && masterResume.hobbies.length > 0 && (
                   <div>
-                    <h4 className="font-semibold text-sm mb-2">Hobbies & Interests</h4>
+                    <h4 className="font-semibold text-sm mb-2">
+                      Hobbies & Interests
+                    </h4>
                     <div className="flex flex-wrap gap-2">
                       {masterResume.hobbies.map((hobby, i) => (
                         <span

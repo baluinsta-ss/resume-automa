@@ -77,22 +77,30 @@ export const UploadResume: React.FC = () => {
                 <div className="text-sm text-muted-foreground space-y-1">
                   {resume.contact.email && <p>📧 {resume.contact.email}</p>}
                   {resume.contact.phone && <p>📞 {resume.contact.phone}</p>}
-                  {resume.contact.location && <p>📍 {resume.contact.location}</p>}
+                  {resume.contact.location && (
+                    <p>📍 {resume.contact.location}</p>
+                  )}
                 </div>
               </div>
 
               {/* Summary */}
               {resume.summary && (
                 <div>
-                  <h4 className="font-semibold text-sm mb-1">Professional Summary</h4>
-                  <p className="text-sm text-muted-foreground">{resume.summary}</p>
+                  <h4 className="font-semibold text-sm mb-1">
+                    Professional Summary
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    {resume.summary}
+                  </p>
                 </div>
               )}
 
               {/* Skills */}
               {resume.skills.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-sm mb-2">Skills ({resume.skills.length})</h4>
+                  <h4 className="font-semibold text-sm mb-2">
+                    Skills ({resume.skills.length})
+                  </h4>
                   <div className="flex flex-wrap gap-2">
                     {resume.skills.map((skill, i) => (
                       <span
@@ -109,10 +117,15 @@ export const UploadResume: React.FC = () => {
               {/* Experience */}
               {resume.experience.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-sm mb-2">Experience ({resume.experience.length})</h4>
+                  <h4 className="font-semibold text-sm mb-2">
+                    Experience ({resume.experience.length})
+                  </h4>
                   <div className="space-y-2">
                     {resume.experience.map((exp, i) => (
-                      <div key={i} className="text-sm border-l-2 border-primary pl-3">
+                      <div
+                        key={i}
+                        className="text-sm border-l-2 border-primary pl-3"
+                      >
                         <p className="font-medium">{exp.title}</p>
                         <p className="text-xs text-muted-foreground">
                           {exp.company} • {exp.startDate}
@@ -127,7 +140,9 @@ export const UploadResume: React.FC = () => {
               {/* Education */}
               {resume.education.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-sm mb-2">Education ({resume.education.length})</h4>
+                  <h4 className="font-semibold text-sm mb-2">
+                    Education ({resume.education.length})
+                  </h4>
                   <div className="space-y-2">
                     {resume.education.map((edu, i) => (
                       <div key={i} className="text-sm">
@@ -146,7 +161,9 @@ export const UploadResume: React.FC = () => {
               {/* Certifications */}
               {resume.certifications && resume.certifications.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-sm mb-2">Certifications ({resume.certifications.length})</h4>
+                  <h4 className="font-semibold text-sm mb-2">
+                    Certifications ({resume.certifications.length})
+                  </h4>
                   <ul className="space-y-1">
                     {resume.certifications.map((cert, i) => (
                       <li key={i} className="text-sm text-muted-foreground">
@@ -160,7 +177,9 @@ export const UploadResume: React.FC = () => {
               {/* Achievements */}
               {resume.achievements && resume.achievements.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-sm mb-2">Achievements ({resume.achievements.length})</h4>
+                  <h4 className="font-semibold text-sm mb-2">
+                    Achievements ({resume.achievements.length})
+                  </h4>
                   <ul className="space-y-1">
                     {resume.achievements.map((achievement, i) => (
                       <li key={i} className="text-sm text-muted-foreground">
@@ -174,7 +193,9 @@ export const UploadResume: React.FC = () => {
               {/* Publications */}
               {resume.publications && resume.publications.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-sm mb-2">Publications ({resume.publications.length})</h4>
+                  <h4 className="font-semibold text-sm mb-2">
+                    Publications ({resume.publications.length})
+                  </h4>
                   <ul className="space-y-1">
                     {resume.publications.map((publication, i) => (
                       <li key={i} className="text-sm text-muted-foreground">
@@ -188,7 +209,9 @@ export const UploadResume: React.FC = () => {
               {/* Hobbies */}
               {resume.hobbies && resume.hobbies.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-sm mb-2">Hobbies & Interests</h4>
+                  <h4 className="font-semibold text-sm mb-2">
+                    Hobbies & Interests
+                  </h4>
                   <div className="flex flex-wrap gap-2">
                     {resume.hobbies.map((hobby, i) => (
                       <span
