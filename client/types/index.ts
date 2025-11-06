@@ -43,6 +43,9 @@ export interface ResumeData {
   education: Education[];
   projects?: Project[];
   certifications?: string[];
+  achievements?: string[];
+  publications?: string[];
+  hobbies?: string[];
 }
 
 export interface JobDescription {
