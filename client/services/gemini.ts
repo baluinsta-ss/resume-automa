@@ -83,10 +83,14 @@ export async function parseJobFromHTML(
       location: (parsed.location || "").trim(),
       description: (parsed.description || "").trim(),
       requirements: Array.isArray(parsed.requirements)
-        ? parsed.requirements.filter((r: string) => r && r.trim()).map((r: string) => r.trim())
+        ? parsed.requirements
+            .filter((r: string) => r && r.trim())
+            .map((r: string) => r.trim())
         : [],
       skills: Array.isArray(parsed.skills)
-        ? parsed.skills.filter((s: string) => s && s.trim()).map((s: string) => s.trim())
+        ? parsed.skills
+            .filter((s: string) => s && s.trim())
+            .map((s: string) => s.trim())
         : [],
       extractedAt: new Date(),
     };
@@ -180,8 +184,12 @@ export async function tailorResumeForJob(
   const genAI = initGemini();
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-  const jobSkills = jobDescription.skills.join(", ") || jobDescription.description.substring(0, 500);
-  const jobRequirements = jobDescription.requirements.join(", ") || jobDescription.description.substring(0, 300);
+  const jobSkills =
+    jobDescription.skills.join(", ") ||
+    jobDescription.description.substring(0, 500);
+  const jobRequirements =
+    jobDescription.requirements.join(", ") ||
+    jobDescription.description.substring(0, 300);
 
   const prompt = `You are an expert resume optimizer. Tailor this resume to match this specific job posting.
 
@@ -243,14 +251,19 @@ export async function tailorResumeForJob(
         );
         return {
           ...exp,
-          description: (tailored?.newBullets && Array.isArray(tailored.newBullets))
-            ? tailored.newBullets
-            : exp.description,
+          description:
+            tailored?.newBullets && Array.isArray(tailored.newBullets)
+              ? tailored.newBullets
+              : exp.description,
         };
       }),
-      skills: (parsed.recommendedSkillsOrder && Array.isArray(parsed.recommendedSkillsOrder))
-        ? parsed.recommendedSkillsOrder.filter((s: string) => masterResume.skills.includes(s))
-        : masterResume.skills,
+      skills:
+        parsed.recommendedSkillsOrder &&
+        Array.isArray(parsed.recommendedSkillsOrder)
+          ? parsed.recommendedSkillsOrder.filter((s: string) =>
+              masterResume.skills.includes(s),
+            )
+          : masterResume.skills,
     };
 
     return tailoredResume;
@@ -272,12 +285,14 @@ export async function calculateATSScore(
     resume.contact.name,
     resume.summary || "Professional",
     "Skills: " + resume.skills.join(", "),
-    "Experience: " + resume.experience
-      .map((e) => `${e.title} at ${e.company}: ${e.description.join(" ")}`)
-      .join(" | "),
-    "Education: " + resume.education
-      .map((e) => `${e.degree} in ${e.field} from ${e.institution}`)
-      .join(" | "),
+    "Experience: " +
+      resume.experience
+        .map((e) => `${e.title} at ${e.company}: ${e.description.join(" ")}`)
+        .join(" | "),
+    "Education: " +
+      resume.education
+        .map((e) => `${e.degree} in ${e.field} from ${e.institution}`)
+        .join(" | "),
   ].join("\n");
 
   const jobText = [
@@ -327,9 +342,18 @@ export async function calculateATSScore(
     return {
       score: Math.min(100, Math.max(0, parsed.score || 0)),
       matchPercentage: Math.min(100, Math.max(0, parsed.matchPercentage || 0)),
-      keywordMatches: (Array.isArray(parsed.matchedKeywords) ? parsed.matchedKeywords : []).filter((k: string) => k && k.trim()),
-      missingKeywords: (Array.isArray(parsed.missingKeywords) ? parsed.missingKeywords : []).filter((k: string) => k && k.trim()),
-      improvements: (Array.isArray(parsed.improvements) ? parsed.improvements : []).filter((i: string) => i && i.trim()),
+      keywordMatches: (Array.isArray(parsed.matchedKeywords)
+        ? parsed.matchedKeywords
+        : []
+      ).filter((k: string) => k && k.trim()),
+      missingKeywords: (Array.isArray(parsed.missingKeywords)
+        ? parsed.missingKeywords
+        : []
+      ).filter((k: string) => k && k.trim()),
+      improvements: (Array.isArray(parsed.improvements)
+        ? parsed.improvements
+        : []
+      ).filter((i: string) => i && i.trim()),
     };
   } catch (error) {
     console.error("Error calculating ATS score:", error);
@@ -339,20 +363,24 @@ export async function calculateATSScore(
     const jobKeywords = [
       ...jobDescription.skills,
       ...jobDescription.requirements,
-    ].map(k => k.toLowerCase());
+    ].map((k) => k.toLowerCase());
 
-    const matches = jobKeywords.filter(k => resumeStr.includes(k));
-    const matchPercentage = Math.round((matches.length / jobKeywords.length) * 100);
+    const matches = jobKeywords.filter((k) => resumeStr.includes(k));
+    const matchPercentage = Math.round(
+      (matches.length / jobKeywords.length) * 100,
+    );
 
     return {
       score: Math.max(30, matchPercentage),
       matchPercentage: matchPercentage,
       keywordMatches: matches.slice(0, 5),
-      missingKeywords: jobKeywords.filter(k => !resumeStr.includes(k)).slice(0, 5),
+      missingKeywords: jobKeywords
+        .filter((k) => !resumeStr.includes(k))
+        .slice(0, 5),
       improvements: [
         "Add more relevant keywords from the job description",
         "Include specific technical skills mentioned in the job posting",
-        "Quantify achievements with metrics and numbers"
+        "Quantify achievements with metrics and numbers",
       ],
     };
   }
