@@ -184,7 +184,13 @@ function updateUI() {
 }
 
 tailorBtn.addEventListener("click", async () => {
-  if (!state.masterResume || !state.jobData) return;
+  if (!state.masterResume || !state.jobData) {
+    console.error("Missing data for tailoring:", {
+      hasResume: !!state.masterResume,
+      hasJobData: !!state.jobData,
+    });
+    return;
+  }
 
   loadingEl.classList.remove("hidden");
   errorEl.classList.add("hidden");
@@ -192,23 +198,31 @@ tailorBtn.addEventListener("click", async () => {
   tailorBtn.disabled = true;
 
   try {
+    console.log("Starting resume tailoring...");
+
     // Extract job requirements
+    console.log("Extracting job requirements from description...");
     state.jobDescription = await extractJobRequirements(
       state.jobData.description,
     );
+    console.log("Job requirements extracted");
 
     // Tailor resume
+    console.log("Tailoring resume for job...");
     state.tailoredResume = await tailorResumeForJob(
       state.masterResume,
       state.jobDescription,
     );
+    console.log("Resume tailored successfully");
 
     // Calculate ATS score
+    console.log("Calculating ATS score...");
     const atsScoreData = await calculateATSScore(
       state.tailoredResume,
       state.jobDescription,
     );
     state.atsScore = atsScoreData.score;
+    console.log("ATS score calculated:", state.atsScore);
 
     loadingEl.classList.add("hidden");
     successEl.classList.remove("hidden");
@@ -220,7 +234,9 @@ tailorBtn.addEventListener("click", async () => {
   } catch (error) {
     loadingEl.classList.add("hidden");
     errorEl.classList.remove("hidden");
-    errorEl.textContent = `✗ Error: ${error instanceof Error ? error.message : "Unknown error"}`;
+    const errorMsg = error instanceof Error ? error.message : "Unknown error";
+    console.error("Tailoring error:", error);
+    errorEl.textContent = `✗ Error: ${errorMsg}`;
     tailorBtn.disabled = false;
   }
 });
