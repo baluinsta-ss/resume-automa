@@ -70,7 +70,38 @@ export async function setUserId(userId: string): Promise<void> {
 }
 
 export async function getMasterResume(): Promise<ResumeData | null> {
-  return getFromStorage(STORAGE_KEYS.MASTER_RESUME);
+  // Try to get from chrome.storage first (extension context)
+  if (typeof chrome !== "undefined" && chrome.storage) {
+    try {
+      const result = await getFromStorage(STORAGE_KEYS.MASTER_RESUME);
+      if (result) {
+        return result;
+      }
+    } catch (e) {
+      console.warn("Failed to get from chrome.storage:", e);
+    }
+  }
+
+  // Fallback to localStorage (web app context)
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.MASTER_RESUME);
+    if (stored) {
+      const resume = JSON.parse(stored);
+      // Sync to chrome.storage if available
+      if (typeof chrome !== "undefined" && chrome.storage) {
+        try {
+          await saveToStorage(STORAGE_KEYS.MASTER_RESUME, resume);
+        } catch (e) {
+          console.warn("Could not sync to chrome.storage:", e);
+        }
+      }
+      return resume;
+    }
+  } catch (e) {
+    console.warn("Failed to get from localStorage:", e);
+  }
+
+  return null;
 }
 
 export async function setMasterResume(resume: ResumeData): Promise<void> {
