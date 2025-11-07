@@ -26,6 +26,7 @@ export async function parseJobFromHTML(
   const cleanHTML = htmlContent
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
     .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "")
+    .replace(/<!--[\s\S]*?-->/g, "") // Remove HTML comments
     .substring(0, 16000); // Limit to first 16k chars for API limits
 
   const prompt = `You are an expert at extracting job posting information from HTML pages.
@@ -51,15 +52,17 @@ export async function parseJobFromHTML(
   - Extract technical skills (programming languages, tools, frameworks) and soft skills
   - If information is not found, use empty string or empty array
   - Return only the JSON object, nothing else
+  - Make sure to extract the most relevant job description from the page
 
   HTML Content to parse:
   ${cleanHTML}`;
 
   try {
+    console.log("Sending HTML to Gemini for parsing...", cleanHTML.length, "chars");
     const result = await model.generateContent(prompt);
     const text = result.response.text().trim();
 
-    console.log("Gemini response for job parsing:", text.substring(0, 200));
+    console.log("Gemini response for job parsing:", text.substring(0, 300));
 
     // Try to extract JSON from response
     let parsed;
@@ -71,13 +74,18 @@ export async function parseJobFromHTML(
       // Try to find JSON object in the response
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        parsed = JSON.parse(jsonMatch[0]);
+        try {
+          parsed = JSON.parse(jsonMatch[0]);
+        } catch (innerE) {
+          console.error("Failed to parse extracted JSON:", innerE);
+          throw new Error("No valid JSON found in response");
+        }
       } else {
         throw new Error("No JSON found in response");
       }
     }
 
-    return {
+    const result_obj: JobDescription = {
       title: (parsed.title || "Unknown Position").trim(),
       company: (parsed.company || "Unknown Company").trim(),
       location: (parsed.location || "").trim(),
@@ -94,6 +102,9 @@ export async function parseJobFromHTML(
         : [],
       extractedAt: new Date(),
     };
+
+    console.log("Successfully parsed job description:", result_obj.title, "at", result_obj.company);
+    return result_obj;
   } catch (error) {
     console.error("Error parsing job from HTML:", error);
 
@@ -103,6 +114,8 @@ export async function parseJobFromHTML(
       .replace(/\s+/g, " ")
       .trim()
       .substring(0, 2000);
+
+    console.log("Using fallback text extraction:", textContent.substring(0, 100));
 
     return {
       title: "Job Position",
