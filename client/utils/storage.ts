@@ -109,9 +109,19 @@ export async function setMasterResume(resume: ResumeData): Promise<void> {
   localStorage.setItem(STORAGE_KEYS.MASTER_RESUME, JSON.stringify(resume));
 
   // Also save to chrome.storage.sync if available (for extension access)
-  if (typeof chrome !== "undefined" && chrome.storage) {
+  if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.sync) {
     try {
-      await saveToStorage(STORAGE_KEYS.MASTER_RESUME, resume);
+      // Store as JSON string to ensure compatibility
+      await new Promise<void>((resolve, reject) => {
+        chrome.storage.sync.set({ [STORAGE_KEYS.MASTER_RESUME]: JSON.stringify(resume) }, () => {
+          if (chrome.runtime.lastError) {
+            reject(chrome.runtime.lastError);
+          } else {
+            console.log("Master resume saved to chrome.storage.sync");
+            resolve();
+          }
+        });
+      });
     } catch (e) {
       console.warn("Could not save to chrome.storage:", e);
     }
