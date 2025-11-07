@@ -105,7 +105,17 @@ export async function getMasterResume(): Promise<ResumeData | null> {
 }
 
 export async function setMasterResume(resume: ResumeData): Promise<void> {
-  return saveToStorage(STORAGE_KEYS.MASTER_RESUME, resume);
+  // Always save to localStorage as primary storage (works in all contexts)
+  localStorage.setItem(STORAGE_KEYS.MASTER_RESUME, JSON.stringify(resume));
+
+  // Also save to chrome.storage.sync if available (for extension access)
+  if (typeof chrome !== "undefined" && chrome.storage) {
+    try {
+      await saveToStorage(STORAGE_KEYS.MASTER_RESUME, resume);
+    } catch (e) {
+      console.warn("Could not save to chrome.storage:", e);
+    }
+  }
 }
 
 export async function getAuthToken(): Promise<string | null> {
