@@ -20,17 +20,6 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       // Update extension badge to indicate it's a job site
       chrome.action.setBadgeText({ text: "✓", tabId });
       chrome.action.setBadgeBackgroundColor({ color: "#6633ff", tabId });
-
-      // Inject content script
-      chrome.scripting
-        .executeScript({
-          target: { tabId },
-          files: ["src/content/content.ts"],
-        })
-        .catch(() => {
-          // Script injection failed, content script may already be injected
-          console.log("Content script injection skipped");
-        });
     }
   }
 });
