@@ -6,8 +6,7 @@
   "permissions": ["storage", "tabs", "scripting", "downloads"],
   "host_permissions": ["https://*/*", "http://*/*"],
   "background": {
-    "service_worker": "background.js",
-    "type": "module"
+    "service_worker": "background.js"
   },
   "action": {
     "default_popup": "popup.html",
