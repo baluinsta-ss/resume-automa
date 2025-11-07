@@ -65,6 +65,7 @@ export default defineConfig({
         dir: "dist/extension",
         entryFileNames: "[name].js",
         format: "iife",
+        inlineDynamicImports: false,
       },
       manualChunks: undefined,
     },
