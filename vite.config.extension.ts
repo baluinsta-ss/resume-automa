@@ -29,10 +29,7 @@ export default defineConfig({
         }
 
         // Copy popup.html
-        const popupSrc = path.resolve(
-          __dirname,
-          "client/extension/popup.html"
-        );
+        const popupSrc = path.resolve(__dirname, "client/extension/popup.html");
         const popupDest = path.resolve(distDir, "popup.html");
         if (fs.existsSync(popupSrc)) {
           fs.copyFileSync(popupSrc, popupDest);
@@ -60,10 +57,7 @@ export default defineConfig({
     emptyOutDir: false,
     lib: {
       entry: {
-        background: path.resolve(
-          __dirname,
-          "client/extension/background.ts"
-        ),
+        background: path.resolve(__dirname, "client/extension/background.ts"),
         content: path.resolve(__dirname, "client/extension/content.ts"),
         popup: path.resolve(__dirname, "client/extension/popup.ts"),
       },

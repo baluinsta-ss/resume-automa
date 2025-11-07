@@ -11,6 +11,7 @@ npm run build
 ```
 
 This will create: **`dist/extension/`** with:
+
 - ✅ `manifest.json`
 - ✅ `background.js`
 - ✅ `content.js`
@@ -21,15 +22,18 @@ This will create: **`dist/extension/`** with:
 ## Step 2: Load in Chrome
 
 ### 2A. Open Chrome Extensions Page
+
 ```
 chrome://extensions/
 ```
 
 ### 2B. Enable Developer Mode
+
 - Look for **"Developer mode"** toggle in top-right corner
 - Click to turn it **ON** (should be blue)
 
 ### 2C. Load the Extension
+
 1. Click **"Load unpacked"** button
 2. Navigate to your project folder
 3. **Select `dist/extension/` folder** (NOT `client/extension`)
@@ -38,6 +42,7 @@ chrome://extensions/
 ## Step 3: Verify Extension Loaded
 
 You should see:
+
 - ✅ "ResumeMatch Pro" extension in your list
 - ✅ Extension icon in Chrome toolbar (top-right)
 - ✅ No errors in the extension details page
@@ -60,26 +65,33 @@ You should see:
 ## Troubleshooting
 
 ### "Manifest file is missing"
+
 **Problem:** You selected the wrong folder
 **Solution:** Select `dist/extension/` (not `dist/`, not `client/`, not `public/`)
 
 ### Extension doesn't appear
+
 **Solution:**
+
 1. Run `npm run build:extension` again
 2. Go to `chrome://extensions/`
 3. Click refresh button on the extension card
 4. Reload job site page (Ctrl+R)
 
 ### Changes not showing
+
 **Solution:**
+
 1. Rebuild: `npm run build:extension`
 2. Go to `chrome://extensions/`
 3. Click the **refresh icon** on ResumeMatch Pro card
 4. Reload job site (Ctrl+R)
 
 ### Scripts show as red/error
+
 **Problem:** Check popup.js and other files are actually in `dist/extension/`
 **Solution:**
+
 ```bash
 # Verify files exist:
 ls -la dist/extension/
@@ -120,6 +132,7 @@ npm run dev
 ```
 
 ### After Making Changes:
+
 1. Run `npm run build:extension`
 2. Go to `chrome://extensions/`
 3. Click refresh icon on ResumeMatch Pro
@@ -173,7 +186,7 @@ npm run build:extension # Chrome extension
 
 ---
 
-**Ready?** 
+**Ready?**
 
 ```bash
 npm run build:extension
