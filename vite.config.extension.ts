@@ -10,11 +10,7 @@ export default defineConfig({
       name: "copy-extension-assets",
       apply: "build",
       enforce: "post",
-      generateBundle() {
-        // This hook runs after bundle generation
-      },
       writeBundle() {
-        // Create dist/extension directory if it doesn't exist
         const distDir = path.resolve(__dirname, "dist/extension");
         if (!fs.existsSync(distDir)) {
           fs.mkdirSync(distDir, { recursive: true });
@@ -29,7 +25,10 @@ export default defineConfig({
         }
 
         // Copy popup.html
-        const popupSrc = path.resolve(__dirname, "client/extension/popup.html");
+        const popupSrc = path.resolve(
+          __dirname,
+          "client/extension/popup.html"
+        );
         const popupDest = path.resolve(distDir, "popup.html");
         if (fs.existsSync(popupSrc)) {
           fs.copyFileSync(popupSrc, popupDest);
@@ -64,12 +63,15 @@ export default defineConfig({
       output: {
         dir: "dist/extension",
         entryFileNames: "[name].js",
-        format: "iife",
-        inlineDynamicImports: false,
+        format: "es",
+        preserveModules: false,
       },
-      manualChunks: undefined,
+      manualChunks: {
+        background: ["client/extension/background.ts"],
+        content: ["client/extension/content.ts"],
+        popup: ["client/extension/popup.ts"],
+      },
     },
     minify: "terser",
-    chunkSizeWarningLimit: 1000,
   },
 });
