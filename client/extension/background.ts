@@ -24,9 +24,13 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
 });
 
-// Handle download requests from popup if needed
+// Handle messages from content script and popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "downloadResume") {
+  if (request.action === "openPopup") {
+    // Open the extension popup
+    chrome.action.openPopup();
+    sendResponse({ success: true });
+  } else if (request.action === "downloadResume") {
     const { url, filename } = request;
     chrome.downloads.download({
       url,
