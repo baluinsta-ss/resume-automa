@@ -12,7 +12,7 @@ export default defineConfig({
       enforce: "post",
       writeBundle() {
         const distDir = "dist/extension";
-        
+
         if (!fs.existsSync(distDir)) {
           fs.mkdirSync(distDir, { recursive: true });
         }
@@ -25,7 +25,10 @@ export default defineConfig({
 
         // Copy popup HTML
         if (fs.existsSync("client/extension/popup.html")) {
-          fs.copyFileSync("client/extension/popup.html", `${distDir}/popup.html`);
+          fs.copyFileSync(
+            "client/extension/popup.html",
+            `${distDir}/popup.html`,
+          );
           console.log("✓ popup.html");
         }
 
