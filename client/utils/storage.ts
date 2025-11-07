@@ -81,7 +81,8 @@ export async function getMasterResume(): Promise<ResumeData | null> {
             const value = syncResult[STORAGE_KEYS.MASTER_RESUME];
             if (value) {
               try {
-                const resume = typeof value === "string" ? JSON.parse(value) : value;
+                const resume =
+                  typeof value === "string" ? JSON.parse(value) : value;
                 resolve(resume);
               } catch (e) {
                 console.warn("Failed to parse chrome.storage resume:", e);
@@ -110,7 +111,11 @@ export async function getMasterResume(): Promise<ResumeData | null> {
       const resume = JSON.parse(stored);
       console.log("Master resume retrieved from localStorage");
       // Sync to chrome.storage if available
-      if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.sync) {
+      if (
+        typeof chrome !== "undefined" &&
+        chrome.storage &&
+        chrome.storage.sync
+      ) {
         try {
           await setMasterResume(resume);
         } catch (e) {
@@ -136,14 +141,17 @@ export async function setMasterResume(resume: ResumeData): Promise<void> {
     try {
       // Store as JSON string to ensure compatibility
       await new Promise<void>((resolve, reject) => {
-        chrome.storage.sync.set({ [STORAGE_KEYS.MASTER_RESUME]: JSON.stringify(resume) }, () => {
-          if (chrome.runtime.lastError) {
-            reject(chrome.runtime.lastError);
-          } else {
-            console.log("Master resume saved to chrome.storage.sync");
-            resolve();
-          }
-        });
+        chrome.storage.sync.set(
+          { [STORAGE_KEYS.MASTER_RESUME]: JSON.stringify(resume) },
+          () => {
+            if (chrome.runtime.lastError) {
+              reject(chrome.runtime.lastError);
+            } else {
+              console.log("Master resume saved to chrome.storage.sync");
+              resolve();
+            }
+          },
+        );
       });
     } catch (e) {
       console.warn("Could not save to chrome.storage:", e);

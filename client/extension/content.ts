@@ -44,7 +44,7 @@ function injectButton() {
       };
 
       if (basicJobData) {
-        dataToStore['currentJobData'] = basicJobData;
+        dataToStore["currentJobData"] = basicJobData;
       }
 
       // Store in chrome.storage.sync for extension context
@@ -58,7 +58,7 @@ function injectButton() {
             }
           });
         } else {
-          reject(new Error('Chrome storage not available'));
+          reject(new Error("Chrome storage not available"));
         }
       });
 
@@ -69,7 +69,8 @@ function injectButton() {
 
       // Show success feedback
       button.textContent = "✓ Analyzed! Opening...";
-      button.style.background = "linear-gradient(135deg, #10b981 0%, #059669 100%)";
+      button.style.background =
+        "linear-gradient(135deg, #10b981 0%, #059669 100%)";
 
       // Open the popup
       chrome.runtime.sendMessage({ action: "openPopup" }).catch((err) => {
@@ -80,11 +81,14 @@ function injectButton() {
       setTimeout(() => {
         button.textContent = "Analyse";
         button.disabled = false;
-        button.style.background = "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
+        button.style.background =
+          "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
       }, 2000);
     } catch (error) {
       console.error("Error saving page data:", error);
-      alert(`Failed to analyze page: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      alert(
+        `Failed to analyze page: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
       button.textContent = "Analyse";
       button.disabled = false;
     }

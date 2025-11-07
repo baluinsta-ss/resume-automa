@@ -3,6 +3,7 @@
 ## Issues Addressed
 
 This guide fixes:
+
 1. ✅ Chrome extension not seeing uploaded resume from localhost:8080
 2. ✅ Improved HTML parsing with Gemini AI
 3. ✅ Better "Analyse" button functionality
@@ -14,6 +15,7 @@ This guide fixes:
 **Root Cause:** The extension and web app need to share `chrome.storage.sync` properly. The previous code had inconsistencies in how data was stored and retrieved.
 
 **Solution Applied:**
+
 - Updated `storage.ts` to prioritize `chrome.storage.sync` over localStorage
 - Ensured all resume data is stored as JSON strings in chrome.storage for proper sync
 - Added better error handling and logging for debugging
@@ -23,6 +25,7 @@ This guide fixes:
 **Root Cause:** The "Analyse" button captures page HTML, but Gemini needs clean, properly formatted HTML without scripts and styles.
 
 **Solution Applied:**
+
 - Enhanced HTML cleaning in `gemini.ts` to remove scripts, styles, and comments
 - Improved Gemini prompt for better job extraction
 - Added detailed logging for debugging
@@ -87,6 +90,7 @@ npm run dev:extension
 ### Step C: View & Tailor
 
 The popup will show:
+
 - **Status**: Whether master resume was found
 - **Job Info**: Title and company detected
 - **Buttons**:
@@ -127,6 +131,7 @@ User downloads or saves
 ### Gemini Parsing Features
 
 When you click "Analyse", Gemini extracts:
+
 - **Job Title**: Position name
 - **Company**: Employer name
 - **Location**: Job location if available
@@ -135,6 +140,7 @@ When you click "Analyse", Gemini extracts:
 - **Skills**: Technical and soft skills (as array)
 
 **Example Output:**
+
 ```json
 {
   "title": "Senior React Developer",
@@ -155,6 +161,7 @@ When you click "Analyse", Gemini extracts:
 ### Check if Resume is Stored
 
 Open Chrome DevTools (F12):
+
 1. Application tab → Chrome Storage → sync
 2. Look for key: `resumematch_master_resume`
 3. Should show your resume as JSON
@@ -162,6 +169,7 @@ Open Chrome DevTools (F12):
 ### Check if HTML was Captured
 
 Open extension popup, open DevTools for popup (right-click popup → Inspect):
+
 1. Console tab
 2. Look for logs:
    - "Page data saved to chrome.storage.sync"
@@ -173,6 +181,7 @@ Open extension popup, open DevTools for popup (right-click popup → Inspect):
 #### Issue: "No Master Resume" Warning
 
 **Solution:**
+
 1. Go to http://localhost:8080
 2. Click "Tailor Your Resume"
 3. Upload your resume
@@ -185,6 +194,7 @@ Open extension popup, open DevTools for popup (right-click popup → Inspect):
 #### Issue: "No Job Posting Found"
 
 **Solution:**
+
 1. Make sure you're on a supported job site:
    - LinkedIn
    - Indeed
@@ -205,6 +215,7 @@ Open extension popup, open DevTools for popup (right-click popup → Inspect):
 #### Issue: Gemini API Errors
 
 **Solution:**
+
 1. Check `.env.local` has `VITE_GOOGLE_GEMINI_API_KEY` set
 2. Verify the API key works: https://makersuite.google.com/app/apikey
 3. Check API quota hasn't been exceeded
@@ -215,11 +226,13 @@ Open extension popup, open DevTools for popup (right-click popup → Inspect):
 #### Issue: Resume Tailoring is Slow
 
 **Normal:** Gemini API calls take 10-30 seconds
+
 - Extracting job requirements
 - Tailoring resume for the job
 - Calculating ATS score
 
 **If it takes longer:**
+
 1. Check network tab for failed requests
 2. Check Gemini API quota
 3. Check browser console for errors
@@ -230,13 +243,17 @@ Edit `client/extension/popup.ts` and content.ts to see detailed logs:
 
 ```javascript
 // Already added logging for:
-console.log("Initializing extension popup...")
-console.log("Master resume loaded:", resume ? "Yes" : "No")
-console.log("Page HTML retrieved:", pageHTML ? `${pageHTML.length} chars` : "None")
-console.log("Successfully parsed job data from HTML:", state.jobData)
+console.log("Initializing extension popup...");
+console.log("Master resume loaded:", resume ? "Yes" : "No");
+console.log(
+  "Page HTML retrieved:",
+  pageHTML ? `${pageHTML.length} chars` : "None",
+);
+console.log("Successfully parsed job data from HTML:", state.jobData);
 ```
 
 View these in:
+
 1. For popup: Right-click popup → Inspect → Console
 2. For content script: DevTools → Console on the job page
 
@@ -287,12 +304,14 @@ View these in:
 ## Next Steps
 
 1. **For Local Testing:**
+
    ```bash
    npm run dev              # Web app on localhost:8080
    npm run dev:extension    # Extension builder in watch mode
    ```
 
 2. **For Production Build:**
+
    ```bash
    npm run build:extension  # Builds to dist/extension/
    ```

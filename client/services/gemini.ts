@@ -58,7 +58,11 @@ export async function parseJobFromHTML(
   ${cleanHTML}`;
 
   try {
-    console.log("Sending HTML to Gemini for parsing...", cleanHTML.length, "chars");
+    console.log(
+      "Sending HTML to Gemini for parsing...",
+      cleanHTML.length,
+      "chars",
+    );
     const result = await model.generateContent(prompt);
     const text = result.response.text().trim();
 
@@ -103,7 +107,12 @@ export async function parseJobFromHTML(
       extractedAt: new Date(),
     };
 
-    console.log("Successfully parsed job description:", result_obj.title, "at", result_obj.company);
+    console.log(
+      "Successfully parsed job description:",
+      result_obj.title,
+      "at",
+      result_obj.company,
+    );
     return result_obj;
   } catch (error) {
     console.error("Error parsing job from HTML:", error);
@@ -115,7 +124,10 @@ export async function parseJobFromHTML(
       .trim()
       .substring(0, 2000);
 
-    console.log("Using fallback text extraction:", textContent.substring(0, 100));
+    console.log(
+      "Using fallback text extraction:",
+      textContent.substring(0, 100),
+    );
 
     return {
       title: "Job Position",

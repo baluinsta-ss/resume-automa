@@ -45,7 +45,11 @@ const dashboardLink = document.getElementById(
 // Helper to get data from chrome.storage.sync
 async function getFromStorageSync(key: string): Promise<any> {
   return new Promise((resolve, reject) => {
-    if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.sync) {
+    if (
+      typeof chrome !== "undefined" &&
+      chrome.storage &&
+      chrome.storage.sync
+    ) {
       chrome.storage.sync.get([key], (result) => {
         if (chrome.runtime.lastError) {
           reject(chrome.runtime.lastError);
@@ -86,7 +90,10 @@ async function init() {
 
     try {
       pageHTML = await getFromStorageSync("currentPageHTML");
-      console.log("Page HTML retrieved:", pageHTML ? `${pageHTML.length} chars` : "None");
+      console.log(
+        "Page HTML retrieved:",
+        pageHTML ? `${pageHTML.length} chars` : "None",
+      );
     } catch (e) {
       console.warn("Could not get page HTML:", e);
     }
