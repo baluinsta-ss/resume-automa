@@ -22,6 +22,9 @@ function injectButton() {
   injectedButton = true;
 
   button.addEventListener("click", async () => {
+    button.textContent = "⏳ Analyzing...";
+    button.disabled = true;
+
     // Capture the full HTML page
     const pageHTML = getPageHTML();
     const pageText = getPageText();
@@ -39,13 +42,25 @@ function injectButton() {
         await saveToStorage("currentJobData", basicJobData);
       }
 
+      console.log("Page data saved. Page HTML length:", pageHTML.length);
+      console.log("Page text length:", pageText.length);
+      console.log("Basic job data extracted:", basicJobData);
+
       // Open the popup
-      chrome.runtime.sendMessage({ action: "openPopup" }).catch(() => {
-        // Popup may already be open
+      chrome.runtime.sendMessage({ action: "openPopup" }).catch((err) => {
+        console.log("Popup open request sent (or already open):", err);
       });
+
+      // Reset button after successful save
+      setTimeout(() => {
+        button.textContent = "📄 Match & Download Resume";
+        button.disabled = false;
+      }, 1000);
     } catch (error) {
       console.error("Error saving page data:", error);
       alert("Failed to analyze page. Please try again.");
+      button.textContent = "📄 Match & Download Resume";
+      button.disabled = false;
     }
   });
 }
