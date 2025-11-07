@@ -16,6 +16,68 @@ function initGemini(): GoogleGenerativeAI {
   return client;
 }
 
+export async function parseJobFromHTML(
+  htmlContent: string,
+): Promise<JobDescription> {
+  const genAI = initGemini();
+  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+  const prompt = `Extract job information from this HTML page content.
+  Return a JSON object with this exact format:
+  {
+    "title": "job title",
+    "company": "company name",
+    "location": "location or empty string",
+    "description": "full job description",
+    "requirements": ["requirement 1", "requirement 2", ...],
+    "skills": ["skill 1", "skill 2", ...]
+  }
+
+  Focus on extracting:
+  1. The job title/position
+  2. The company name
+  3. The location if available
+  4. The complete job description
+  5. Key requirements and qualifications
+  6. Required technical and soft skills
+
+  HTML Content:
+  ${htmlContent.substring(0, 12000)}`;
+
+  const result = await model.generateContent(prompt);
+  const text = result.response.text();
+
+  try {
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      return {
+        title: parsed.title || "Unknown Position",
+        company: parsed.company || "Unknown Company",
+        location: parsed.location || "",
+        description: parsed.description || "",
+        requirements: Array.isArray(parsed.requirements)
+          ? parsed.requirements
+          : [],
+        skills: Array.isArray(parsed.skills) ? parsed.skills : [],
+        extractedAt: new Date(),
+      };
+    }
+  } catch (e) {
+    console.error("Error parsing job from HTML:", e);
+  }
+
+  return {
+    title: "Unknown Position",
+    company: "Unknown Company",
+    location: "",
+    description: htmlContent.substring(0, 2000),
+    requirements: [],
+    skills: [],
+    extractedAt: new Date(),
+  };
+}
+
 export async function analyzeMasterResume(resume: ResumeData): Promise<string> {
   const genAI = initGemini();
   const model = genAI.getGenerativeModel({ model: "gemini-pro" });
