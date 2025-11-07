@@ -35,31 +35,61 @@ function injectButton() {
 
     // Save page content to storage for the popup to access
     try {
-      await saveToStorage("currentPageHTML", pageHTML);
-      await saveToStorage("currentPageText", pageText);
-      await saveToStorage("currentPageURL", pageURL);
+      // Use chrome.storage.sync directly to ensure data persists across extension contexts
+      const dataToStore = {
+        currentPageHTML: pageHTML,
+        currentPageText: pageText,
+        currentPageURL: pageURL,
+        currentPageAnalyzedAt: new Date().toISOString(),
+      };
+
       if (basicJobData) {
-        await saveToStorage("currentJobData", basicJobData);
+        dataToStore["currentJobData"] = basicJobData;
       }
 
-      console.log("Page data saved. Page HTML length:", pageHTML.length);
+      // Store in chrome.storage.sync for extension context
+      await new Promise<void>((resolve, reject) => {
+        if (chrome.storage && chrome.storage.sync) {
+          chrome.storage.sync.set(dataToStore, () => {
+            if (chrome.runtime.lastError) {
+              reject(chrome.runtime.lastError);
+            } else {
+              resolve();
+            }
+          });
+        } else {
+          reject(new Error("Chrome storage not available"));
+        }
+      });
+
+      console.log("Page data saved to chrome.storage.sync");
+      console.log("Page HTML length:", pageHTML.length);
       console.log("Page text length:", pageText.length);
       console.log("Basic job data extracted:", basicJobData);
 
+      // Show success feedback
+      button.textContent = "✓ Analyzed! Opening...";
+      button.style.background =
+        "linear-gradient(135deg, #10b981 0%, #059669 100%)";
+
       // Open the popup
       chrome.runtime.sendMessage({ action: "openPopup" }).catch((err) => {
-        console.log("Popup open request sent (or already open):", err);
+        console.log("Popup message sent:", err?.message || "success");
       });
 
-      // Reset button after successful save
+      // Reset button after a delay
       setTimeout(() => {
-        button.textContent = "📄 Match & Download Resume";
+        button.textContent = "Analyse";
         button.disabled = false;
-      }, 1000);
+        button.style.background =
+          "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
+      }, 2000);
     } catch (error) {
       console.error("Error saving page data:", error);
-      alert("Failed to analyze page. Please try again.");
-      button.textContent = "📄 Match & Download Resume";
+      alert(
+        `Failed to analyze page: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+      button.textContent = "Analyse";
       button.disabled = false;
     }
   });

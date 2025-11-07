@@ -42,62 +42,87 @@ const dashboardLink = document.getElementById(
   "dashboard-link",
 ) as HTMLAnchorElement;
 
+// Helper to get data from chrome.storage.sync
+async function getFromStorageSync(key: string): Promise<any> {
+  return new Promise((resolve, reject) => {
+    if (
+      typeof chrome !== "undefined" &&
+      chrome.storage &&
+      chrome.storage.sync
+    ) {
+      chrome.storage.sync.get([key], (result) => {
+        if (chrome.runtime.lastError) {
+          reject(chrome.runtime.lastError);
+        } else {
+          const value = result[key];
+          // Handle both stringified and direct JSON objects
+          if (typeof value === "string") {
+            try {
+              resolve(JSON.parse(value));
+            } catch (e) {
+              resolve(value);
+            }
+          } else {
+            resolve(value || null);
+          }
+        }
+      });
+    } else {
+      reject(new Error("chrome.storage.sync not available"));
+    }
+  });
+}
+
 // Initialize
 async function init() {
   try {
+    console.log("Initializing extension popup...");
+
     // Get master resume from browser storage
-    // Try chrome.storage first, then fall back to checking extension storage
     let resume = await getMasterResume();
-
-    if (!resume) {
-      // Try to get from chrome.storage.sync directly as backup
-      try {
-        const syncData = await new Promise<any>((resolve, reject) => {
-          if (typeof chrome !== "undefined" && chrome.storage) {
-            chrome.storage.sync.get("resumematch_master_resume", (result) => {
-              if (chrome.runtime.lastError) {
-                reject(chrome.runtime.lastError);
-              } else {
-                resolve(result);
-              }
-            });
-          } else {
-            reject(new Error("chrome.storage not available"));
-          }
-        });
-
-        if (syncData && syncData["resumematch_master_resume"]) {
-          const stored = syncData["resumematch_master_resume"];
-          resume = typeof stored === "string" ? JSON.parse(stored) : stored;
-        }
-      } catch (e) {
-        console.warn("Could not access chrome.storage.sync:", e);
-      }
-    }
+    console.log("Master resume loaded:", resume ? "Yes" : "No");
 
     state.masterResume = resume;
 
     // Get job data from storage (captured by content script when Analyse button was clicked)
-    const pageHTML = await getFromStorage("currentPageHTML");
-    const basicJobData = await getFromStorage("currentJobData");
+    let pageHTML: string | null = null;
+    let basicJobData: JobDescription | null = null;
+
+    try {
+      pageHTML = await getFromStorageSync("currentPageHTML");
+      console.log(
+        "Page HTML retrieved:",
+        pageHTML ? `${pageHTML.length} chars` : "None",
+      );
+    } catch (e) {
+      console.warn("Could not get page HTML:", e);
+    }
+
+    try {
+      basicJobData = await getFromStorageSync("currentJobData");
+      console.log("Basic job data retrieved:", basicJobData ? "Yes" : "No");
+    } catch (e) {
+      console.warn("Could not get job data:", e);
+    }
 
     if (pageHTML) {
       try {
+        console.log("Parsing HTML with Gemini...");
         // Parse HTML using Gemini to extract job details
-        const parsedJobData = await parseJobFromHTML(pageHTML as string);
+        const parsedJobData = await parseJobFromHTML(pageHTML);
         state.jobData = parsedJobData;
         console.log("Successfully parsed job data from HTML:", state.jobData);
       } catch (error) {
         console.error("Error parsing HTML with Gemini:", error);
         // Fallback to basic job data if Gemini parsing fails
         if (basicJobData) {
-          state.jobData = basicJobData as JobDescription;
-          console.log("Using fallback job data");
+          state.jobData = basicJobData;
+          console.log("Using fallback job data from DOM extraction");
         }
       }
     } else if (basicJobData) {
       // Fallback if no HTML was captured
-      state.jobData = basicJobData as JobDescription;
+      state.jobData = basicJobData;
       console.log("Using basic job data from content script");
     } else {
       console.log("No job data or HTML found in storage");
@@ -166,7 +191,13 @@ function updateUI() {
 }
 
 tailorBtn.addEventListener("click", async () => {
-  if (!state.masterResume || !state.jobData) return;
+  if (!state.masterResume || !state.jobData) {
+    console.error("Missing data for tailoring:", {
+      hasResume: !!state.masterResume,
+      hasJobData: !!state.jobData,
+    });
+    return;
+  }
 
   loadingEl.classList.remove("hidden");
   errorEl.classList.add("hidden");
@@ -174,23 +205,31 @@ tailorBtn.addEventListener("click", async () => {
   tailorBtn.disabled = true;
 
   try {
+    console.log("Starting resume tailoring...");
+
     // Extract job requirements
+    console.log("Extracting job requirements from description...");
     state.jobDescription = await extractJobRequirements(
       state.jobData.description,
     );
+    console.log("Job requirements extracted");
 
     // Tailor resume
+    console.log("Tailoring resume for job...");
     state.tailoredResume = await tailorResumeForJob(
       state.masterResume,
       state.jobDescription,
     );
+    console.log("Resume tailored successfully");
 
     // Calculate ATS score
+    console.log("Calculating ATS score...");
     const atsScoreData = await calculateATSScore(
       state.tailoredResume,
       state.jobDescription,
     );
     state.atsScore = atsScoreData.score;
+    console.log("ATS score calculated:", state.atsScore);
 
     loadingEl.classList.add("hidden");
     successEl.classList.remove("hidden");
@@ -202,7 +241,9 @@ tailorBtn.addEventListener("click", async () => {
   } catch (error) {
     loadingEl.classList.add("hidden");
     errorEl.classList.remove("hidden");
-    errorEl.textContent = `✗ Error: ${error instanceof Error ? error.message : "Unknown error"}`;
+    const errorMsg = error instanceof Error ? error.message : "Unknown error";
+    console.error("Tailoring error:", error);
+    errorEl.textContent = `✗ Error: ${errorMsg}`;
     tailorBtn.disabled = false;
   }
 });

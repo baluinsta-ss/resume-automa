@@ -216,6 +216,7 @@ export function createJobExtractionButton(): HTMLElement {
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     z-index: 10000;
     transition: all 0.3s ease;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   `;
 
   button.onmouseover = () => {
