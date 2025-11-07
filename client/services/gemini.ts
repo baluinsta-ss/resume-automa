@@ -178,66 +178,87 @@ export async function tailorResumeForJob(
   jobDescription: JobDescription,
 ): Promise<ResumeData> {
   const genAI = initGemini();
-  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-  const prompt = `You are an expert resume optimizer. Tailor this resume for this specific job.
-  
-  Job Title: ${jobDescription.title}
-  Company: ${jobDescription.company}
-  Required Skills: ${jobDescription.skills.join(", ")}
-  
-  Original Resume:
-  Name: ${masterResume.contact.name}
-  Summary: ${masterResume.summary || "No summary"}
-  Skills: ${masterResume.skills.join(", ")}
-  
-  Experience:
-  ${masterResume.experience.map((e) => `${e.title} at ${e.company}: ${e.description.join(" ")}`).join("\n\n")}
-  
-  Provide a tailored summary and rewritten experience descriptions that:
-  1. Highlight relevant skills matching the job
-  2. Use keywords from the job description
-  3. Emphasize achievements matching job requirements
-  4. Optimize for ATS (use standard formatting, keywords naturally)
-  
-  Return JSON with this format:
+  const jobSkills = jobDescription.skills.join(", ") || jobDescription.description.substring(0, 500);
+  const jobRequirements = jobDescription.requirements.join(", ") || jobDescription.description.substring(0, 300);
+
+  const prompt = `You are an expert resume optimizer. Tailor this resume to match this specific job posting.
+
+  TARGET JOB:
+  - Title: ${jobDescription.title}
+  - Company: ${jobDescription.company}
+  - Required Skills: ${jobSkills}
+  - Requirements: ${jobRequirements}
+
+  ORIGINAL RESUME:
+  - Name: ${masterResume.contact.name}
+  - Summary: ${masterResume.summary || "Professional with relevant experience"}
+  - All Skills: ${masterResume.skills.join(", ")}
+
+  - Experience:
+  ${masterResume.experience.map((e, i) => `${i + 1}. ${e.title} at ${e.company} (${e.startDate}${e.endDate ? ` - ${e.endDate}` : ""}): ${e.description.join(" ")}`).join("\n\n")}
+
+  TASK: Create a tailored version that:
+  1. Rewrites the professional summary to highlight relevant experience for THIS job
+  2. Reorders and rewrites experience bullets to emphasize skills matching the job
+  3. Uses keywords from the job description naturally
+  4. Maintains ATS-friendly formatting (standard keywords, no special characters)
+  5. Keeps achievements and quantifiable results that are relevant
+
+  Return ONLY a valid JSON object (no markdown, no code blocks):
   {
-    "tailoredSummary": "tailored 2-3 sentence summary",
+    "tailoredSummary": "2-3 sentence professional summary tailored for this specific job, highlighting most relevant experience",
     "tailoredExperience": [
-      {"originalTitle": "Original Job Title", "newDescription": ["tailored bullet 1", "tailored bullet 2", ...]}
+      {"jobTitle": "job title from original resume", "newBullets": ["tailored bullet point 1", "tailored bullet point 2", "tailored bullet point 3"]},
+      {"jobTitle": "another job title", "newBullets": ["bullet 1", "bullet 2"]}
     ],
-    "keywordMatches": ["matching skill 1", "matching skill 2", ...]
+    "recommendedSkillsOrder": ["most relevant skill 1", "relevant skill 2", "skill 3"]
   }`;
 
-  const result = await model.generateContent(prompt);
-  const text = result.response.text();
-
   try {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
+    const result = await model.generateContent(prompt);
+    const text = result.response.text().trim();
 
-      const tailoredResume: ResumeData = {
-        ...masterResume,
-        summary: parsed.tailoredSummary || masterResume.summary,
-        experience: masterResume.experience.map((exp, idx) => {
-          const tailored = parsed.tailoredExperience?.find(
-            (t: any) => t.originalTitle === exp.title,
-          );
-          return {
-            ...exp,
-            description: tailored?.newDescription || exp.description,
-          };
-        }),
-      };
+    console.log("Tailor response received, length:", text.length);
 
-      return tailoredResume;
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch (e) {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        parsed = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error("No valid JSON in response");
+      }
     }
-  } catch (e) {
-    console.error("Error tailoring resume:", e);
-  }
 
-  return masterResume;
+    const tailoredResume: ResumeData = {
+      ...masterResume,
+      summary: parsed.tailoredSummary || masterResume.summary,
+      experience: masterResume.experience.map((exp) => {
+        const tailored = parsed.tailoredExperience?.find(
+          (t: any) => t.jobTitle?.toLowerCase() === exp.title.toLowerCase(),
+        );
+        return {
+          ...exp,
+          description: (tailored?.newBullets && Array.isArray(tailored.newBullets))
+            ? tailored.newBullets
+            : exp.description,
+        };
+      }),
+      skills: (parsed.recommendedSkillsOrder && Array.isArray(parsed.recommendedSkillsOrder))
+        ? parsed.recommendedSkillsOrder.filter((s: string) => masterResume.skills.includes(s))
+        : masterResume.skills,
+    };
+
+    return tailoredResume;
+  } catch (error) {
+    console.error("Error tailoring resume:", error);
+    // Return original resume if tailoring fails
+    return masterResume;
+  }
 }
 
 export async function calculateATSScore(
