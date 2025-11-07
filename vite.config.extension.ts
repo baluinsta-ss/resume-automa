@@ -65,7 +65,7 @@ export default defineConfig({
         dir: "dist/extension",
         entryFileNames: "[name].js",
         format: "iife",
-        inlineDynamicImports: true,
+        inlineDynamicImports: false,
       },
     },
     minify: "terser",
