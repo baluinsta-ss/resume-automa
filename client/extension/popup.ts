@@ -46,7 +46,36 @@ const dashboardLink = document.getElementById(
 async function init() {
   try {
     // Get master resume from browser storage
-    state.masterResume = await getMasterResume();
+    // Try chrome.storage first, then fall back to checking extension storage
+    let resume = await getMasterResume();
+
+    if (!resume) {
+      // Try to get from chrome.storage.sync directly as backup
+      try {
+        const syncData = await new Promise<any>((resolve, reject) => {
+          if (typeof chrome !== "undefined" && chrome.storage) {
+            chrome.storage.sync.get("resumematch_master_resume", (result) => {
+              if (chrome.runtime.lastError) {
+                reject(chrome.runtime.lastError);
+              } else {
+                resolve(result);
+              }
+            });
+          } else {
+            reject(new Error("chrome.storage not available"));
+          }
+        });
+
+        if (syncData && syncData["resumematch_master_resume"]) {
+          const stored = syncData["resumematch_master_resume"];
+          resume = typeof stored === "string" ? JSON.parse(stored) : stored;
+        }
+      } catch (e) {
+        console.warn("Could not access chrome.storage.sync:", e);
+      }
+    }
+
+    state.masterResume = resume;
 
     // Get job data from storage (captured by content script when Analyse button was clicked)
     const pageHTML = await getFromStorage("currentPageHTML");
@@ -57,21 +86,21 @@ async function init() {
         // Parse HTML using Gemini to extract job details
         const parsedJobData = await parseJobFromHTML(pageHTML as string);
         state.jobData = parsedJobData;
+        console.log("Successfully parsed job data from HTML:", state.jobData);
       } catch (error) {
         console.error("Error parsing HTML with Gemini:", error);
         // Fallback to basic job data if Gemini parsing fails
         if (basicJobData) {
           state.jobData = basicJobData as JobDescription;
+          console.log("Using fallback job data");
         }
       }
     } else if (basicJobData) {
       // Fallback if no HTML was captured
       state.jobData = basicJobData as JobDescription;
-    }
-
-    if (!state.masterResume) {
-      updateUI();
-      return;
+      console.log("Using basic job data from content script");
+    } else {
+      console.log("No job data or HTML found in storage");
     }
 
     updateUI();
