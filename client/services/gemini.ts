@@ -266,60 +266,94 @@ export async function calculateATSScore(
   jobDescription: JobDescription,
 ): Promise<ATSScore> {
   const genAI = initGemini();
-  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   const resumeText = [
     resume.contact.name,
-    resume.summary,
-    resume.skills.join(" "),
-    resume.experience
-      .map((e) => `${e.title} ${e.company} ${e.description.join(" ")}`)
-      .join(" "),
-    resume.education
-      .map((e) => `${e.degree} ${e.field} ${e.institution}`)
-      .join(" "),
-  ].join(" ");
+    resume.summary || "Professional",
+    "Skills: " + resume.skills.join(", "),
+    "Experience: " + resume.experience
+      .map((e) => `${e.title} at ${e.company}: ${e.description.join(" ")}`)
+      .join(" | "),
+    "Education: " + resume.education
+      .map((e) => `${e.degree} in ${e.field} from ${e.institution}`)
+      .join(" | "),
+  ].join("\n");
 
-  const prompt = `Analyze this resume against a job description for ATS (Applicant Tracking System) compatibility.
-  
-  Resume: ${resumeText}
-  
-  Job Requirements: ${jobDescription.requirements.join(", ")}
-  Required Skills: ${jobDescription.skills.join(", ")}
-  
-  Provide a JSON response with:
+  const jobText = [
+    `Job: ${jobDescription.title} at ${jobDescription.company}`,
+    `Skills needed: ${jobDescription.skills.join(", ")}`,
+    `Requirements: ${jobDescription.requirements.join(", ")}`,
+    `Description: ${jobDescription.description.substring(0, 500)}`,
+  ].join("\n");
+
+  const prompt = `Analyze how well this resume matches the job posting for ATS (Applicant Tracking System) screening.
+
+  RESUME:
+  ${resumeText}
+
+  JOB POSTING:
+  ${jobText}
+
+  Evaluate the match and return ONLY a valid JSON object (no markdown):
   {
-    "score": number (0-100),
-    "matchPercentage": number (0-100),
-    "matchedKeywords": ["keyword1", "keyword2", ...],
-    "missingKeywords": ["keyword1", "keyword2", ...],
-    "improvements": ["improvement 1", "improvement 2", ...]
-  }`;
-
-  const result = await model.generateContent(prompt);
-  const text = result.response.text();
-
-  try {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      return {
-        score: parsed.score || 0,
-        matchPercentage: parsed.matchPercentage || 0,
-        keywordMatches: parsed.matchedKeywords || [],
-        missingKeywords: parsed.missingKeywords || [],
-        improvements: parsed.improvements || [],
-      };
-    }
-  } catch (e) {
-    console.error("Error calculating ATS score:", e);
+    "score": number between 0-100 (how likely ATS will rank it high),
+    "matchPercentage": number between 0-100 (percentage of job requirements matched),
+    "matchedKeywords": ["keyword matched 1", "keyword matched 2", "keyword matched 3"],
+    "missingKeywords": ["important missing keyword 1", "missing keyword 2"],
+    "improvements": ["specific improvement 1", "specific improvement 2", "specific improvement 3"]
   }
 
-  return {
-    score: 0,
-    matchPercentage: 0,
-    keywordMatches: [],
-    missingKeywords: [],
-    improvements: [],
-  };
+  Be honest and practical in your assessment.`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const text = result.response.text().trim();
+
+    console.log("ATS Score response received, length:", text.length);
+
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch (e) {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        parsed = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error("No valid JSON in response");
+      }
+    }
+
+    return {
+      score: Math.min(100, Math.max(0, parsed.score || 0)),
+      matchPercentage: Math.min(100, Math.max(0, parsed.matchPercentage || 0)),
+      keywordMatches: (Array.isArray(parsed.matchedKeywords) ? parsed.matchedKeywords : []).filter((k: string) => k && k.trim()),
+      missingKeywords: (Array.isArray(parsed.missingKeywords) ? parsed.missingKeywords : []).filter((k: string) => k && k.trim()),
+      improvements: (Array.isArray(parsed.improvements) ? parsed.improvements : []).filter((i: string) => i && i.trim()),
+    };
+  } catch (error) {
+    console.error("Error calculating ATS score:", error);
+
+    // Fallback: simple keyword matching
+    const resumeStr = resumeText.toLowerCase();
+    const jobKeywords = [
+      ...jobDescription.skills,
+      ...jobDescription.requirements,
+    ].map(k => k.toLowerCase());
+
+    const matches = jobKeywords.filter(k => resumeStr.includes(k));
+    const matchPercentage = Math.round((matches.length / jobKeywords.length) * 100);
+
+    return {
+      score: Math.max(30, matchPercentage),
+      matchPercentage: matchPercentage,
+      keywordMatches: matches.slice(0, 5),
+      missingKeywords: jobKeywords.filter(k => !resumeStr.includes(k)).slice(0, 5),
+      improvements: [
+        "Add more relevant keywords from the job description",
+        "Include specific technical skills mentioned in the job posting",
+        "Quantify achievements with metrics and numbers"
+      ],
+    };
+  }
 }
