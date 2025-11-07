@@ -20,62 +20,96 @@ export async function parseJobFromHTML(
   htmlContent: string,
 ): Promise<JobDescription> {
   const genAI = initGemini();
-  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-  const prompt = `Extract job information from this HTML page content.
-  Return a JSON object with this exact format:
+  // Clean HTML to remove scripts and styles for better parsing
+  const cleanHTML = htmlContent
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "")
+    .substring(0, 16000); // Limit to first 16k chars for API limits
+
+  const prompt = `You are an expert at extracting job posting information from HTML pages.
+
+  Analyze this HTML content and extract the job posting details. Be thorough in finding all job information, requirements, and skills.
+
+  Return ONLY a valid JSON object (no markdown, no code blocks, just raw JSON) with this exact structure:
   {
-    "title": "job title",
-    "company": "company name",
-    "location": "location or empty string",
-    "description": "full job description",
-    "requirements": ["requirement 1", "requirement 2", ...],
-    "skills": ["skill 1", "skill 2", ...]
+    "title": "the job title or position name",
+    "company": "the company name",
+    "location": "location if available, or empty string",
+    "description": "the full job description and responsibilities",
+    "requirements": ["requirement or qualification 1", "requirement or qualification 2", "requirement or qualification 3"],
+    "skills": ["technical skill 1", "technical skill 2", "soft skill 1", "soft skill 2"]
   }
 
-  Focus on extracting:
-  1. The job title/position
-  2. The company name
-  3. The location if available
-  4. The complete job description
-  5. Key requirements and qualifications
-  6. Required technical and soft skills
+  Guidelines:
+  - Extract the actual job title (not 'Job' or generic text)
+  - Find the company name from the page
+  - Include location if mentioned
+  - Combine all job description/responsibilities into one description field
+  - List key requirements and qualifications as an array
+  - Extract technical skills (programming languages, tools, frameworks) and soft skills
+  - If information is not found, use empty string or empty array
+  - Return only the JSON object, nothing else
 
-  HTML Content:
-  ${htmlContent.substring(0, 12000)}`;
-
-  const result = await model.generateContent(prompt);
-  const text = result.response.text();
+  HTML Content to parse:
+  ${cleanHTML}`;
 
   try {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      return {
-        title: parsed.title || "Unknown Position",
-        company: parsed.company || "Unknown Company",
-        location: parsed.location || "",
-        description: parsed.description || "",
-        requirements: Array.isArray(parsed.requirements)
-          ? parsed.requirements
-          : [],
-        skills: Array.isArray(parsed.skills) ? parsed.skills : [],
-        extractedAt: new Date(),
-      };
-    }
-  } catch (e) {
-    console.error("Error parsing job from HTML:", e);
-  }
+    const result = await model.generateContent(prompt);
+    const text = result.response.text().trim();
 
-  return {
-    title: "Unknown Position",
-    company: "Unknown Company",
-    location: "",
-    description: htmlContent.substring(0, 2000),
-    requirements: [],
-    skills: [],
-    extractedAt: new Date(),
-  };
+    console.log("Gemini response for job parsing:", text.substring(0, 200));
+
+    // Try to extract JSON from response
+    let parsed;
+
+    // First, try to parse as direct JSON
+    try {
+      parsed = JSON.parse(text);
+    } catch (e) {
+      // Try to find JSON object in the response
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        parsed = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error("No JSON found in response");
+      }
+    }
+
+    return {
+      title: (parsed.title || "Unknown Position").trim(),
+      company: (parsed.company || "Unknown Company").trim(),
+      location: (parsed.location || "").trim(),
+      description: (parsed.description || "").trim(),
+      requirements: Array.isArray(parsed.requirements)
+        ? parsed.requirements.filter((r: string) => r && r.trim()).map((r: string) => r.trim())
+        : [],
+      skills: Array.isArray(parsed.skills)
+        ? parsed.skills.filter((s: string) => s && s.trim()).map((s: string) => s.trim())
+        : [],
+      extractedAt: new Date(),
+    };
+  } catch (error) {
+    console.error("Error parsing job from HTML:", error);
+
+    // Extract text content from HTML as fallback
+    const textContent = htmlContent
+      .replace(/<[^>]*>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .substring(0, 2000);
+
+    return {
+      title: "Job Position",
+      company: "Company",
+      location: "",
+      description: textContent,
+      requirements: [],
+      skills: [],
+      extractedAt: new Date(),
+    };
+  }
 }
 
 export async function analyzeMasterResume(resume: ResumeData): Promise<string> {
