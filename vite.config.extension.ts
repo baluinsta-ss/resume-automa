@@ -25,10 +25,7 @@ export default defineConfig({
         }
 
         // Copy popup.html
-        const popupSrc = path.resolve(
-          __dirname,
-          "client/extension/popup.html"
-        );
+        const popupSrc = path.resolve(__dirname, "client/extension/popup.html");
         const popupDest = path.resolve(distDir, "popup.html");
         if (fs.existsSync(popupSrc)) {
           fs.copyFileSync(popupSrc, popupDest);
