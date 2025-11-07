@@ -3,6 +3,7 @@ import {
   tailorResumeForJob,
   calculateATSScore,
   extractJobRequirements,
+  parseJobFromHTML,
 } from "@/services/gemini";
 import { saveApplication } from "@/services/mongodb";
 import { downloadResume, generateResumeDocx } from "@/services/resumeGenerator";
@@ -47,25 +48,25 @@ async function init() {
     // Get master resume from browser storage
     state.masterResume = await getMasterResume();
 
-    // Get job data from current tab
-    const currentTab = await chrome.tabs.query({
-      active: true,
-      currentWindow: true,
-    });
+    // Get job data from storage (captured by content script when Analyse button was clicked)
+    const pageHTML = await getFromStorage("currentPageHTML");
+    const basicJobData = await getFromStorage("currentJobData");
 
-    if (currentTab[0].id) {
-      chrome.tabs.sendMessage(
-        currentTab[0].id,
-        { action: "getJobData" },
-        (response) => {
-          if (response && response.jobData) {
-            state.jobData = response.jobData;
-          }
-          updateUI();
-        },
-      );
-    } else {
-      updateUI();
+    if (pageHTML) {
+      try {
+        // Parse HTML using Gemini to extract job details
+        const parsedJobData = await parseJobFromHTML(pageHTML as string);
+        state.jobData = parsedJobData;
+      } catch (error) {
+        console.error("Error parsing HTML with Gemini:", error);
+        // Fallback to basic job data if Gemini parsing fails
+        if (basicJobData) {
+          state.jobData = basicJobData as JobDescription;
+        }
+      }
+    } else if (basicJobData) {
+      // Fallback if no HTML was captured
+      state.jobData = basicJobData as JobDescription;
     }
 
     if (!state.masterResume) {
