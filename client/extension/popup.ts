@@ -25,22 +25,30 @@ let state: PopupState = {
   jobDescription: null,
 };
 
-const statusEl = document.getElementById("status")!;
-const jobInfoEl = document.getElementById("job-info")!;
-const loadingEl = document.getElementById("loading")!;
-const errorEl = document.getElementById("error")!;
-const successEl = document.getElementById("success")!;
-const buttonsEl = document.getElementById("buttons")!;
-const mainContentEl = document.getElementById("main-content")!;
+console.log("[Popup] Script loaded, querying DOM elements...");
 
-const tailorBtn = document.getElementById("tailor-btn") as HTMLButtonElement;
-const downloadBtn = document.getElementById(
-  "download-btn",
-) as HTMLButtonElement;
-const saveBtn = document.getElementById("save-btn") as HTMLButtonElement;
-const dashboardLink = document.getElementById(
-  "dashboard-link",
-) as HTMLAnchorElement;
+const statusEl = document.getElementById("status");
+const jobInfoEl = document.getElementById("job-info");
+const loadingEl = document.getElementById("loading");
+const errorEl = document.getElementById("error");
+const successEl = document.getElementById("success");
+const buttonsEl = document.getElementById("buttons");
+const mainContentEl = document.getElementById("main-content");
+
+const tailorBtn = document.getElementById("tailor-btn") as HTMLButtonElement | null;
+const downloadBtn = document.getElementById("download-btn") as HTMLButtonElement | null;
+const saveBtn = document.getElementById("save-btn") as HTMLButtonElement | null;
+const dashboardLink = document.getElementById("dashboard-link") as HTMLAnchorElement | null;
+
+console.log("[Popup] DOM elements found:", {
+  statusEl: !!statusEl,
+  jobInfoEl: !!jobInfoEl,
+  loadingEl: !!loadingEl,
+  errorEl: !!errorEl,
+  successEl: !!successEl,
+  buttonsEl: !!buttonsEl,
+  tailorBtn: !!tailorBtn,
+});
 
 // Helper to get data from chrome.storage.sync
 async function getFromStorageSync(key: string): Promise<any> {
