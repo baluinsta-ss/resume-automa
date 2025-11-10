@@ -6,6 +6,42 @@ import { saveToStorage } from "@/utils/storage";
 
 let injectedButton = false;
 
+// Monitor for resume uploads on localhost:8080 and sync to chrome.storage
+function syncResumeToExtension() {
+  try {
+    const resumeKey = "resumematch_master_resume";
+    const resumeData = localStorage.getItem(resumeKey);
+
+    if (resumeData && chrome.storage && chrome.storage.sync) {
+      chrome.storage.sync.set(
+        { [resumeKey]: resumeData },
+        () => {
+          if (!chrome.runtime.lastError) {
+            console.log("✓ Resume synced to chrome.storage.sync");
+          } else {
+            console.warn("Failed to sync resume:", chrome.runtime.lastError);
+          }
+        },
+      );
+    }
+  } catch (e) {
+    console.warn("Could not sync resume:", e);
+  }
+}
+
+// Listen for storage changes in the web app
+window.addEventListener("storage", (event) => {
+  if (event.key === "resumematch_master_resume") {
+    console.log("Resume updated in localStorage, syncing to extension...");
+    syncResumeToExtension();
+  }
+});
+
+// Also sync on page load
+if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+  syncResumeToExtension();
+}
+
 function getPageHTML(): string {
   return document.documentElement.outerHTML;
 }
