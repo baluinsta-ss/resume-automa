@@ -104,10 +104,16 @@ async function getResumeFromLocalhost(): Promise<any> {
           { action: "getResume" },
           (response) => {
             if (chrome.runtime.lastError) {
-              console.warn("[Popup] Could not reach content script:", chrome.runtime.lastError?.message || "Unknown error");
+              console.warn(
+                "[Popup] Could not reach content script:",
+                chrome.runtime.lastError?.message || "Unknown error",
+              );
               resolve(null);
             } else {
-              console.log("[Popup] Got resume from localhost:", response?.resume ? "YES" : "NO");
+              console.log(
+                "[Popup] Got resume from localhost:",
+                response?.resume ? "YES" : "NO",
+              );
               resolve(response?.resume || null);
             }
           },
@@ -136,14 +142,17 @@ async function init() {
     if (!resume) {
       console.log("[Popup] Attempting to get resume from localhost...");
       resume = await getResumeFromLocalhost();
-      console.log("[Popup] Master resume from localhost:", resume ? "YES (Found)" : "NO (Not found)");
+      console.log(
+        "[Popup] Master resume from localhost:",
+        resume ? "YES (Found)" : "NO (Not found)",
+      );
 
       // If found, save it to chrome.storage for future use
       if (resume) {
         try {
           await new Promise<void>((resolve) => {
             chrome.storage.sync.set(
-              { "resumematch_master_resume": JSON.stringify(resume) },
+              { resumematch_master_resume: JSON.stringify(resume) },
               () => {
                 if (!chrome.runtime.lastError) {
                   console.log("[Popup] Cached resume in chrome.storage.sync");

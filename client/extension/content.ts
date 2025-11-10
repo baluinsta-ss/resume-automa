@@ -17,25 +17,44 @@ function syncResumeToExtension() {
 
     if (resumeData) {
       // Check if chrome.storage.sync is available
-      if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.sync) {
-        console.log("[Content Script] Syncing resume to chrome.storage.sync...");
+      if (
+        typeof chrome !== "undefined" &&
+        chrome.storage &&
+        chrome.storage.sync
+      ) {
+        console.log(
+          "[Content Script] Syncing resume to chrome.storage.sync...",
+        );
         try {
           chrome.storage.sync.set({ [resumeKey]: resumeData }, () => {
             try {
               if (!chrome.runtime.lastError) {
-                console.log("[Content Script] ✓ Resume synced to chrome.storage.sync");
+                console.log(
+                  "[Content Script] ✓ Resume synced to chrome.storage.sync",
+                );
               } else {
-                console.error("[Content Script] Failed to sync resume:", chrome.runtime.lastError?.message || "Unknown error");
+                console.error(
+                  "[Content Script] Failed to sync resume:",
+                  chrome.runtime.lastError?.message || "Unknown error",
+                );
               }
             } catch (callbackError) {
-              console.error("[Content Script] Error in callback:", callbackError);
+              console.error(
+                "[Content Script] Error in callback:",
+                callbackError,
+              );
             }
           });
         } catch (storageError) {
-          console.error("[Content Script] Error accessing chrome.storage:", storageError);
+          console.error(
+            "[Content Script] Error accessing chrome.storage:",
+            storageError,
+          );
           // If extension context is invalidated, this is expected
           if ((storageError as any)?.message?.includes("context invalidated")) {
-            console.log("[Content Script] Extension context was invalidated, will retry on next sync");
+            console.log(
+              "[Content Script] Extension context was invalidated, will retry on next sync",
+            );
           }
         }
       } else {
@@ -202,7 +221,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       const resumeData = localStorage.getItem(resumeKey);
       if (resumeData) {
         const parsed = JSON.parse(resumeData);
-        console.log("[Content Script] Sending resume to popup:", parsed.contact?.name);
+        console.log(
+          "[Content Script] Sending resume to popup:",
+          parsed.contact?.name,
+        );
         sendResponse({ resume: parsed });
       } else {
         console.warn("[Content Script] No resume in localhost localStorage");
