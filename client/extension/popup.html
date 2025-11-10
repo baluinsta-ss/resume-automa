@@ -314,6 +314,21 @@
       </div>
     </div>
 
-    <script src="popup.js" type="module"></script>
+    <script>
+      console.log("[Popup HTML] Script tag executed");
+      console.log("[Popup HTML] About to load popup.js module");
+    </script>
+    <script src="popup.js" type="module">
+      console.log("[Popup HTML] popup.js module loaded");
+    </script>
+    <script>
+      console.log("[Popup HTML] After popup.js script tag");
+      // Check if init() was called
+      if (typeof window.init !== 'undefined') {
+        console.log("[Popup HTML] init function exists");
+      } else {
+        console.warn("[Popup HTML] init function NOT found - popup.js failed to load!");
+      }
+    </script>
   </body>
 </html>
