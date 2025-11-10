@@ -12,17 +12,28 @@ function syncResumeToExtension() {
     const resumeKey = "resumematch_master_resume";
     const resumeData = localStorage.getItem(resumeKey);
 
+    console.log("[Content Script] Checking for resume...");
+    console.log("[Content Script] Resume exists:", !!resumeData);
+
     if (resumeData && chrome.storage && chrome.storage.sync) {
+      console.log("[Content Script] Syncing resume to chrome.storage.sync...");
       chrome.storage.sync.set({ [resumeKey]: resumeData }, () => {
         if (!chrome.runtime.lastError) {
-          console.log("✓ Resume synced to chrome.storage.sync");
+          console.log("[Content Script] ✓ Resume synced to chrome.storage.sync");
         } else {
-          console.warn("Failed to sync resume:", chrome.runtime.lastError);
+          console.error("[Content Script] Failed to sync resume:", chrome.runtime.lastError);
         }
       });
+    } else {
+      if (!resumeData) {
+        console.warn("[Content Script] No resume found in localStorage");
+      }
+      if (!chrome.storage || !chrome.storage.sync) {
+        console.error("[Content Script] chrome.storage.sync not available");
+      }
     }
   } catch (e) {
-    console.warn("Could not sync resume:", e);
+    console.error("[Content Script] Error syncing resume:", e);
   }
 }
 
