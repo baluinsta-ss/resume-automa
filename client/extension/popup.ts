@@ -76,11 +76,21 @@ async function getFromStorageSync(key: string): Promise<any> {
 // Initialize
 async function init() {
   try {
-    console.log("Initializing extension popup...");
+    console.log("[Popup] Initializing extension popup...");
+
+    // Debug: Check what's in chrome.storage.sync
+    if (chrome.storage && chrome.storage.sync) {
+      chrome.storage.sync.get(null, (result) => {
+        console.log("[Popup] Current chrome.storage.sync contents:", result);
+      });
+    }
 
     // Get master resume from browser storage
     let resume = await getMasterResume();
-    console.log("Master resume loaded:", resume ? "Yes" : "No");
+    console.log("[Popup] Master resume loaded:", resume ? "YES (Found)" : "NO (Not found)");
+    if (resume) {
+      console.log("[Popup] Resume name:", resume.contact?.name);
+    }
 
     state.masterResume = resume;
 
