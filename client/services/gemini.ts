@@ -27,7 +27,7 @@ export async function parseJobFromHTML(
   htmlContent: string,
 ): Promise<JobDescription> {
   const genAI = initGemini();
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   // Clean HTML to remove scripts and styles for better parsing
   const cleanHTML = htmlContent
@@ -150,7 +150,7 @@ export async function parseJobFromHTML(
 
 export async function analyzeMasterResume(resume: ResumeData): Promise<string> {
   const genAI = initGemini();
-  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   const prompt = `Analyze this resume and provide a concise summary of key strengths and areas:
   
@@ -174,7 +174,7 @@ export async function extractJobRequirements(
   jobDescription: string,
 ): Promise<JobDescription> {
   const genAI = initGemini();
-  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   const prompt = `Extract structured information from this job description. Return JSON with this format:
   {
@@ -214,7 +214,7 @@ export async function tailorResumeForJob(
   jobDescription: JobDescription,
 ): Promise<ResumeData> {
   const genAI = initGemini();
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   const jobSkills =
     jobDescription.skills.join(", ") ||
@@ -311,7 +311,7 @@ export async function calculateATSScore(
   jobDescription: JobDescription,
 ): Promise<ATSScore> {
   const genAI = initGemini();
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   const resumeText = [
     resume.contact.name,
