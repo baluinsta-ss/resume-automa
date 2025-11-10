@@ -257,12 +257,12 @@
   <body>
     <script>
       // Global error handler for module loading failures
-      window.addEventListener('error', (event) => {
-        console.error('[Popup Global Error]', event.error);
+      window.addEventListener("error", (event) => {
+        console.error("[Popup Global Error]", event.error);
       });
 
-      window.addEventListener('unhandledrejection', (event) => {
-        console.error('[Popup Unhandled Promise]', event.reason);
+      window.addEventListener("unhandledrejection", (event) => {
+        console.error("[Popup Unhandled Promise]", event.reason);
       });
 
       console.log("[Popup HTML] Global error handlers installed");
@@ -336,10 +336,12 @@
     <script>
       console.log("[Popup HTML] After popup.js script tag");
       // Check if init() was called
-      if (typeof window.init !== 'undefined') {
+      if (typeof window.init !== "undefined") {
         console.log("[Popup HTML] init function exists");
       } else {
-        console.warn("[Popup HTML] init function NOT found - popup.js failed to load!");
+        console.warn(
+          "[Popup HTML] init function NOT found - popup.js failed to load!",
+        );
       }
     </script>
   </body>

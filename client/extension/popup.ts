@@ -35,10 +35,16 @@ const successEl = document.getElementById("success");
 const buttonsEl = document.getElementById("buttons");
 const mainContentEl = document.getElementById("main-content");
 
-const tailorBtn = document.getElementById("tailor-btn") as HTMLButtonElement | null;
-const downloadBtn = document.getElementById("download-btn") as HTMLButtonElement | null;
+const tailorBtn = document.getElementById(
+  "tailor-btn",
+) as HTMLButtonElement | null;
+const downloadBtn = document.getElementById(
+  "download-btn",
+) as HTMLButtonElement | null;
 const saveBtn = document.getElementById("save-btn") as HTMLButtonElement | null;
-const dashboardLink = document.getElementById("dashboard-link") as HTMLAnchorElement | null;
+const dashboardLink = document.getElementById(
+  "dashboard-link",
+) as HTMLAnchorElement | null;
 
 console.log("[Popup] DOM elements found:", {
   statusEl: !!statusEl,
@@ -95,7 +101,10 @@ async function init() {
 
     // Get master resume from browser storage
     let resume = await getMasterResume();
-    console.log("[Popup] Master resume loaded:", resume ? "YES (Found)" : "NO (Not found)");
+    console.log(
+      "[Popup] Master resume loaded:",
+      resume ? "YES (Found)" : "NO (Not found)",
+    );
     if (resume) {
       console.log("[Popup] Resume name:", resume.contact?.name);
     }
