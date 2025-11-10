@@ -32,6 +32,15 @@ export default defineConfig({
           console.log("✓ popup.html");
         }
 
+        // Copy debug HTML
+        if (fs.existsSync("client/extension/debug.html")) {
+          fs.copyFileSync(
+            "client/extension/debug.html",
+            `${distDir}/debug.html`,
+          );
+          console.log("✓ debug.html");
+        }
+
         // Copy favicon
         if (fs.existsSync("public/favicon.ico")) {
           fs.copyFileSync("public/favicon.ico", `${distDir}/favicon.ico`);
