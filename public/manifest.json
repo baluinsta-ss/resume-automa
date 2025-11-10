@@ -5,6 +5,9 @@
   "description": "AI-powered resume tailoring for job applications",
   "permissions": ["storage", "tabs", "scripting", "downloads"],
   "host_permissions": ["https://*/*", "http://*/*"],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
   "background": {
     "service_worker": "background.js"
   },
