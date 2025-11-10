@@ -30,7 +30,7 @@ async function enhanceWithGemini(
   resumeText: string,
 ): Promise<ResumeData> {
   const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   const prompt = `Parse this resume and extract structured information. Return a JSON object with these fields:
 {
