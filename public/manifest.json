@@ -35,7 +35,9 @@
         "*://*.glassdoor.com/*",
         "*://*.dice.com/*",
         "*://*.ziprecruiter.com/*",
-        "*://*.builtin.com/*"
+        "*://*.builtin.com/*",
+        "http://localhost:*/*",
+        "http://127.0.0.1:*/*"
       ],
       "js": ["content.js"],
       "run_at": "document_end"
