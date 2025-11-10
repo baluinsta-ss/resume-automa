@@ -13,16 +13,13 @@ function syncResumeToExtension() {
     const resumeData = localStorage.getItem(resumeKey);
 
     if (resumeData && chrome.storage && chrome.storage.sync) {
-      chrome.storage.sync.set(
-        { [resumeKey]: resumeData },
-        () => {
-          if (!chrome.runtime.lastError) {
-            console.log("✓ Resume synced to chrome.storage.sync");
-          } else {
-            console.warn("Failed to sync resume:", chrome.runtime.lastError);
-          }
-        },
-      );
+      chrome.storage.sync.set({ [resumeKey]: resumeData }, () => {
+        if (!chrome.runtime.lastError) {
+          console.log("✓ Resume synced to chrome.storage.sync");
+        } else {
+          console.warn("Failed to sync resume:", chrome.runtime.lastError);
+        }
+      });
     }
   } catch (e) {
     console.warn("Could not sync resume:", e);
@@ -38,7 +35,10 @@ window.addEventListener("storage", (event) => {
 });
 
 // Also sync on page load
-if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+if (
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1"
+) {
   syncResumeToExtension();
 }
 
