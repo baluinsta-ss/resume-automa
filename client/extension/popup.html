@@ -255,6 +255,18 @@
     </style>
   </head>
   <body>
+    <script>
+      // Global error handler for module loading failures
+      window.addEventListener('error', (event) => {
+        console.error('[Popup Global Error]', event.error);
+      });
+
+      window.addEventListener('unhandledrejection', (event) => {
+        console.error('[Popup Unhandled Promise]', event.reason);
+      });
+
+      console.log("[Popup HTML] Global error handlers installed");
+    </script>
     <div class="container">
       <div class="header">
         <h1>📄 ResumeMatch Pro</h1>
