@@ -87,17 +87,43 @@ async function getFromStorageSync(key: string): Promise<any> {
   });
 }
 
+// Helper to request resume from content script on localhost
+async function getResumeFromLocalhost(): Promise<any> {
+  return new Promise((resolve) => {
+    try {
+      chrome.tabs.query({ url: "http://localhost:*/*" }, (tabs) => {
+        if (!tabs.length) {
+          console.log("[Popup] No localhost tabs found");
+          resolve(null);
+          return;
+        }
+
+        const tab = tabs[0];
+        chrome.tabs.sendMessage(
+          tab.id!,
+          { action: "getResume" },
+          (response) => {
+            if (chrome.runtime.lastError) {
+              console.warn("[Popup] Could not reach content script:", chrome.runtime.lastError?.message || "Unknown error");
+              resolve(null);
+            } else {
+              console.log("[Popup] Got resume from localhost:", response?.resume ? "YES" : "NO");
+              resolve(response?.resume || null);
+            }
+          },
+        );
+      });
+    } catch (e) {
+      console.warn("[Popup] Error querying localhost tabs:", e);
+      resolve(null);
+    }
+  });
+}
+
 // Initialize
 async function init() {
   try {
     console.log("[Popup] Initializing extension popup...");
-
-    // Debug: Check what's in chrome.storage.sync
-    if (chrome.storage && chrome.storage.sync) {
-      chrome.storage.sync.get(null, (result) => {
-        console.log("[Popup] Current chrome.storage.sync contents:", result);
-      });
-    }
 
     // Get master resume from browser storage
     let resume = await getMasterResume();
@@ -105,6 +131,33 @@ async function init() {
       "[Popup] Master resume loaded:",
       resume ? "YES (Found)" : "NO (Not found)",
     );
+
+    // If not found in chrome.storage, try to get from localhost content script
+    if (!resume) {
+      console.log("[Popup] Attempting to get resume from localhost...");
+      resume = await getResumeFromLocalhost();
+      console.log("[Popup] Master resume from localhost:", resume ? "YES (Found)" : "NO (Not found)");
+
+      // If found, save it to chrome.storage for future use
+      if (resume) {
+        try {
+          await new Promise<void>((resolve) => {
+            chrome.storage.sync.set(
+              { "resumematch_master_resume": JSON.stringify(resume) },
+              () => {
+                if (!chrome.runtime.lastError) {
+                  console.log("[Popup] Cached resume in chrome.storage.sync");
+                }
+                resolve();
+              },
+            );
+          });
+        } catch (e) {
+          console.warn("[Popup] Could not cache resume:", e);
+        }
+      }
+    }
+
     if (resume) {
       console.log("[Popup] Resume name:", resume.contact?.name);
     }
