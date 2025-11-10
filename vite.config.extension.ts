@@ -56,9 +56,8 @@ export default defineConfig({
         content: "client/extension/content.ts",
         popup: "client/extension/popup.ts",
       },
-      formats: ["iife"],
+      formats: ["es"],
       fileName: (format, entryName) => `${entryName}.js`,
-      name: "ResumeMatchPro",
     },
     rollupOptions: {
       output: {
