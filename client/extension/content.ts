@@ -176,5 +176,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   } else if (request.action === "injectButton") {
     injectButton();
     sendResponse({ success: true });
+  } else if (request.action === "checkSync") {
+    console.log("[Content Script] checkSync message received");
+    sendResponse({ status: "Content script is active" });
+  } else if (request.action === "syncResume") {
+    console.log("[Content Script] Manual sync requested");
+    syncResumeToExtension();
+    sendResponse({ status: "Sync triggered" });
   }
 });
