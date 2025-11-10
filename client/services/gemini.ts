@@ -1,7 +1,14 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { ResumeData, JobDescription, ATSScore } from "@/types";
 
-const GEMINI_API_KEY = import.meta.env.VITE_GOOGLE_GEMINI_API_KEY || "";
+let GEMINI_API_KEY = "";
+
+try {
+  GEMINI_API_KEY = (import.meta.env as any)?.VITE_GOOGLE_GEMINI_API_KEY || "";
+} catch (e) {
+  console.warn("[Gemini] Could not access import.meta.env:", e);
+  GEMINI_API_KEY = "";
+}
 
 let client: GoogleGenerativeAI | null = null;
 
