@@ -195,5 +195,22 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     console.log("[Content Script] Manual sync requested");
     syncResumeToExtension();
     sendResponse({ status: "Sync triggered" });
+  } else if (request.action === "getResume") {
+    // Send resume from localhost localStorage to popup
+    try {
+      const resumeKey = "resumematch_master_resume";
+      const resumeData = localStorage.getItem(resumeKey);
+      if (resumeData) {
+        const parsed = JSON.parse(resumeData);
+        console.log("[Content Script] Sending resume to popup:", parsed.contact?.name);
+        sendResponse({ resume: parsed });
+      } else {
+        console.warn("[Content Script] No resume in localhost localStorage");
+        sendResponse({ resume: null });
+      }
+    } catch (e) {
+      console.error("[Content Script] Error getting resume:", e);
+      sendResponse({ resume: null, error: (e as Error).message });
+    }
   }
 });
